@@ -11,13 +11,13 @@ export default class CardDeck {
         this.buildCards();
     }
 
-    private buildCards() : void {
+    protected buildCards() : void {
         this.buildNumberCards();
         this.buildActionCards();
         this.buildWildCards();
     }
 
-    private buildNumberCards() : void {
+    protected buildNumberCards() : void {
         for (let cardColorKey in CardColor) {
             if (isNaN(Number(cardColorKey))) {
                 const color : CardColor = (<any>CardColor)[cardColorKey];
@@ -31,12 +31,12 @@ export default class CardDeck {
         }
     }
 
-    private buildActionCards() : void {
+    protected buildActionCards(repetition : number = 2) : void {
         for (let cardColorKey in CardColor) {
             if (isNaN(Number(cardColorKey))) {
                 const color : CardColor = (<any>CardColor)[cardColorKey];
 
-                for (let i = 0; i < 2; i++) {
+                for (let i = 0; i < repetition; i++) {
                     this.cards.push(new ActionCard(CardType.SKIP, color));
                     this.cards.push(new ActionCard(CardType.REVERSE, color));
                     this.cards.push(new ActionCard(CardType.DRAW_TWO, color));
@@ -45,8 +45,8 @@ export default class CardDeck {
         }
     }
 
-    private buildWildCards(): void {
-        for (let i = 0; i < 4; i++) {
+    protected buildWildCards(repetition : number = 4): void {
+        for (let i = 0; i < repetition; i++) {
             this.cards.push(new WildCard(CardType.WILD_COLOR));
             this.cards.push(new WildCard(CardType.WILD_DRAW_FOUR));
         }
