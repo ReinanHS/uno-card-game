@@ -20,6 +20,8 @@ export default class PreloadScene extends Phaser.Scene {
         this.load.image('Table_3', 'assets/images/table/Table_3.png');
         this.load.image('Table_4', 'assets/images/table/Table_4.png');
 
+        this.load.image('Deck', `assets/images/cards/Deck.png`);
+
         const cardDeck: UniqueCardDeck = new UniqueCardDeck();
         cardDeck.cards.forEach((card: Card) => {
             const capitalizeName = (text?: string): string => {

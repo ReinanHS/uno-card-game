@@ -15,4 +15,8 @@ export default class NumberCard extends AbstractCard {
     get number(): number {
         return this._number;
     }
+
+    get key(): string {
+        return `${CardColor[this.color]}_${this.number}`;
+    }
 }

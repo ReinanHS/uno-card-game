@@ -8,4 +8,10 @@ export default class ActionCard extends AbstractCard {
         super(type, color);
         validateActionType(type);
     }
+
+    get key(): string {
+        let type = CardType[this.type].replace('DRAW_TWO', 'DRAW');
+
+        return `${CardColor[this.color]}_${type}`;
+    }
 }

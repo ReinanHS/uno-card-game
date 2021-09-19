@@ -2,11 +2,11 @@ import Card from "./Card";
 import {CardColor, CardType} from "./CardEnum";
 import {validateColor} from "./CardUtil";
 
-export default class AbstractCard implements Card {
+export default abstract class AbstractCard implements Card {
     private readonly _type: CardType;
     private readonly _color: CardColor;
 
-    constructor(type: CardType, color?: CardColor, ignoreValidation: boolean = false) {
+    protected constructor(type: CardType, color?: CardColor, ignoreValidation: boolean = false) {
         this._type = type;
         this._color = color;
 
@@ -22,4 +22,6 @@ export default class AbstractCard implements Card {
     get color(): CardColor {
         return this._color;
     }
+
+    abstract get key(): string;
 }
