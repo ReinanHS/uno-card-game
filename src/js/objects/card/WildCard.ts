@@ -1,0 +1,9 @@
+import AbstractCard from "./AbstractCard";
+import {CardColor, CardType} from "./CardEnum";
+
+export default class WildCard extends AbstractCard {
+
+    constructor(type: CardType, color?: CardColor) {
+        super(type, color, type === CardType.WILD_DRAW_FOUR);
+    }
+}
