@@ -1,5 +1,6 @@
 import 'phaser'
 import PreloadScene from "./scenes/PreloadScene";
+import MainScene from "./scenes/MainScene";
 
 const DEFAULT_WIDTH: number = 1280
 const DEFAULT_HEIGHT: number = 720
@@ -17,6 +18,7 @@ const config = {
     pixelArt: true,
     scene: [
         PreloadScene,
+        MainScene,
     ],
 }
 

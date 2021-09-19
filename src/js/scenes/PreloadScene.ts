@@ -6,7 +6,7 @@ export default class PreloadScene extends Phaser.Scene {
         });
     }
 
-    public preload() : void {
+    public preload(): void {
         this.load.image('Table_0', 'assets/images/table/Table_0.png');
         this.load.image('Table_1', 'assets/images/table/Table_1.png');
         this.load.image('Table_2', 'assets/images/table/Table_2.png');
@@ -17,11 +17,15 @@ export default class PreloadScene extends Phaser.Scene {
         this.load.on('complete', this.complete);
     }
 
-    public updateBar(percentage : number): void {
-        console.log(`Loading ${percentage}%`)
+    public updateBar(percentage: number): void {
+        console.log(`Loading ${percentage}%`);
     }
 
     public complete(): void {
-        console.log(`Complete`)
+        console.log(`Complete`);
+    }
+
+    public create() {
+        this.scene.start('MainScene');
     }
 }
