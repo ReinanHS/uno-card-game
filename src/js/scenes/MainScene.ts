@@ -14,7 +14,7 @@ export default class MainScene extends Phaser.Scene {
         console.log("create main")
 
         let cardDeck : CardDeck = new CardDeck();
-        cardDeck.cards = Phaser.Utils.Array.Shuffle(cardDeck.cards);
+        cardDeck.shuffle();
 
         const limitDeck : number = 10;
 
