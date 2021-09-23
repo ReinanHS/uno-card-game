@@ -1,9 +1,9 @@
-import Card from "../objects/card/Card";
-import UniqueCardDeck from "../objects/card/UniqueCardDeck";
-import NumberCard from "../objects/card/NumberCard";
-import {CardColor, CardType} from "../objects/card/CardEnum";
-import ActionCard from "../objects/card/ActionCard";
-import WildCard from "../objects/card/WildCard";
+import Card from "../../game/Objetcs/Entities/Cards/Card";
+import UniqueCardDeck from "../../game/Objetcs/Entities/Cards/UniqueCardDeck";
+import NumberCard from "../../game/Objetcs/Entities/Cards/NumberCard";
+import {CardColor, CardType} from "../../game/Objetcs/Entities/Cards/CardEnum";
+import ActionCard from "../../game/Objetcs/Entities/Cards/ActionCard";
+import WildCard from "../../game/Objetcs/Entities/Cards/WildCard";
 
 export default class PreloadScene extends Phaser.Scene {
 

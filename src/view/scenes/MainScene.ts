@@ -1,4 +1,4 @@
-import CardDeck from "../objects/card/CardDeck";
+import CardDeck from "../../game/Objetcs/Entities/Cards/CardDeck";
 import Sprite = Phaser.GameObjects.Sprite;
 
 export default class MainScene extends Phaser.Scene {

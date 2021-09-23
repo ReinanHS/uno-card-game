@@ -33,7 +33,7 @@ export default class CardDeck {
 
             return;
         } else if (index >= this.cards.length) {
-            throw new Error("The deck is impossible to shuffle with the first card rule");
+            throw new Error("The deck is impossible to shuffle with the first Cards rule");
         }
 
         this.firstCardRule(index + 1);
