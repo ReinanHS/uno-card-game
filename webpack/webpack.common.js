@@ -3,7 +3,7 @@ const CopyPlugin = require("copy-webpack-plugin");
 const path = require('path');
 
 module.exports = {
-    entry: './src/js/game.ts',
+    entry: './src/bootstrap/app.ts',
     module: {
         rules: [
             {
@@ -23,11 +23,11 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: 'src/index.html'
+            template: 'resources/templates/index.html'
         }),
         new CopyPlugin({
             patterns: [
-                { from: "src/assets", to: "assets" },
+                { from: "resources/assets", to: "assets" },
             ],
         }),
     ],
