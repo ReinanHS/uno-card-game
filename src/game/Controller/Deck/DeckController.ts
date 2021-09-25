@@ -28,6 +28,8 @@ export default class DeckController {
     protected deckSprite: DeckSprite;
     protected selectedCardSprite : SelectedCardSprite;
 
+    private readonly _cardSize : number = 0.2;
+
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
 
@@ -39,11 +41,13 @@ export default class DeckController {
         this.cardDeck.shuffle();
         this.createCardsUnderDeck();
 
-        const deckSpritePositionX : number = this.widthScreen / 4 - (this.numberCardsUnderDeck + 25);
-        const deckSpritePositionY : number = this.heightScreen / 2 - 35;
+        let shadow = this.scene.add.sprite((this.widthScreen / 2 + 80) + 3, (this.heightScreen / 2 + 15) + 3, 'Deck');
+        shadow.tint = 0x000000;
+        shadow.alpha = 0.6;
+        shadow.setScale(this._cardSize);
 
-        this.deckSprite = new DeckSprite(this.scene, deckSpritePositionX, deckSpritePositionY);
-        this.selectedCardSprite = new SelectedCardSprite(this.scene, this.widthScreen / 2, this.heightScreen / 2, this.cardDeck.cards[0]);
+        this.selectedCardSprite = new SelectedCardSprite(this.scene, this.widthScreen / 2 + 80, this.heightScreen / 2 + 15, this.cardDeck.cards[0]);
+        this.selectedCardSprite.setScale(this._cardSize);
     }
 
     /**
@@ -51,11 +55,26 @@ export default class DeckController {
      * @private
      */
     private createCardsUnderDeck(): void {
-        for (let i: number = 10; i > 0; i--) {
-            let cardPositionX: number = (this.widthScreen / 4) - (i + Phaser.Math.Between(40, 50));
-            let cardPositionY: number = this.heightScreen / 2 - 40;
+        const limitCardsInUnderDeck = 4;
 
-            this.scene.add.sprite(cardPositionX, cardPositionY, 'Deck').setScale(0.3);
+        let cardPositionX: number = 0;
+        let cardPositionY: number = 0;
+
+        for (let i: number = limitCardsInUnderDeck; i > 0; i--) {
+            cardPositionX = this.widthScreen / 2 - 30;
+            cardPositionY = ((this.heightScreen / 2) + 5) + (4 * i);
+
+            let shadow = this.scene.add.sprite(cardPositionX + 3, cardPositionY + 3, 'Deck');
+            shadow.tint = 0x000000;
+            shadow.alpha = 0.6;
+            shadow.setScale(this._cardSize);
+
+            if(i == 1){
+                this.deckSprite = new DeckSprite(this.scene, cardPositionX, cardPositionY);
+                this.deckSprite.setScale(this._cardSize);
+            } else {
+                this.scene.add.sprite(cardPositionX, cardPositionY, 'Deck').setScale(this._cardSize);
+            }
         }
     }
 }

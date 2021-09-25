@@ -1,6 +1,6 @@
 import AbstractCard from "./AbstractCard";
-import {CardColor, CardType} from "./CardEnum";
-import {validateActionType} from "./CardUtil";
+import {CardColor, CardType} from "../../Enums/Cards/CardEnum";
+import {validateActionType} from "../../../Utilitys/CardUtil";
 
 export default class ActionCard extends AbstractCard {
 

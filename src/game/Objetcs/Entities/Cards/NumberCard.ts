@@ -1,6 +1,6 @@
 import AbstractCard from "./AbstractCard";
-import {CardColor, CardType} from "./CardEnum";
-import {validateNumber} from "./CardUtil";
+import {CardColor, CardType} from "../../Enums/Cards/CardEnum";
+import {validateNumber} from "../../../Utilitys/CardUtil";
 
 export default class NumberCard extends AbstractCard {
     private readonly _number : number;

@@ -1,15 +1,15 @@
-import {CardColor, CardType} from "./CardEnum";
-import Card from "./Card";
+import {CardColor, CardType} from "../Objetcs/Enums/Cards/CardEnum";
+import Card from "../Objetcs/Entities/Cards/Card";
 
 export function validateColor(color: CardColor): void {
     if (color === undefined || color === null) {
-        throw new Error("Card color cannot be set to empty");
+        throw new Error("Cards color cannot be set to empty");
     }
 }
 
 export function validateNumber(number: number): void {
     if (number < 0 || number > 9) {
-        throw new Error("Card number should between 0 and 9");
+        throw new Error("Cards number should between 0 and 9");
     }
 }
 
