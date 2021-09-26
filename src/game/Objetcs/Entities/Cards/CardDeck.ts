@@ -1,5 +1,5 @@
 import Card from "./Card";
-import {CardColor, CardType} from "./CardEnum";
+import {CardColor, CardType} from "../../Enums/Cards/CardEnum";
 import NumberCard from "./NumberCard";
 import ActionCard from "./ActionCard";
 import WildCard from "./WildCard";

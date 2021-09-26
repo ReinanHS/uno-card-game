@@ -3,10 +3,10 @@ import {scenes} from "./scenes";
 
 export const config : object = {
     type: Phaser.AUTO,
-    backgroundColor: '#131313',
+    backgroundColor: '#c52a10',
     scale: {
         parent: 'phaser-game',
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.CENTER_BOTH,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: 1280,
         height: 720

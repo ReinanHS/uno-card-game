@@ -1,5 +1,5 @@
 import AbstractCard from "./AbstractCard";
-import {CardColor, CardType} from "./CardEnum";
+import {CardColor, CardType} from "../../Enums/Cards/CardEnum";
 
 export default class WildCard extends AbstractCard {
 

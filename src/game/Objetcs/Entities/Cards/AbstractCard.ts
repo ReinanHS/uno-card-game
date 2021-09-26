@@ -1,6 +1,6 @@
 import Card from "./Card";
-import {CardColor, CardType} from "./CardEnum";
-import {validateColor} from "./CardUtil";
+import {CardColor, CardType} from "../../Enums/Cards/CardEnum";
+import {validateColor} from "../../../Utilitys/CardUtil";
 
 export default abstract class AbstractCard implements Card {
     private readonly _type: CardType;

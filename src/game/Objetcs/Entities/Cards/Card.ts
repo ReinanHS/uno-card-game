@@ -1,4 +1,4 @@
-import {CardColor, CardType} from "./CardEnum";
+import {CardColor, CardType} from "../../Enums/Cards/CardEnum";
 
 export default interface Card {
     get type(): CardType;
