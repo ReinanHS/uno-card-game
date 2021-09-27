@@ -79,6 +79,7 @@ export default class PreloadScene extends Phaser.Scene {
         this.load.image('Table_2', 'assets/images/table/Table_2.png');
         this.load.image('Table_3', 'assets/images/table/Table_3.png');
         this.load.image('Table_4', 'assets/images/table/Table_4.png');
+        this.load.image('white-circle', 'assets/images/table/white-circle.png');
 
         this.load.image('Deck', `assets/images/cards/Deck.png`);
 
@@ -111,11 +112,11 @@ export default class PreloadScene extends Phaser.Scene {
     }
 
     public create() {
-        this.scene.start('MainScene');
+        //this.scene.start('MainScene');
 
-        // this.add.image(this.scene.systems.canvas.width / 2, this.scene.systems.canvas.height / 2, 'Logo');
-        // setTimeout(() => {
-        //     this.scene.start('MainScene');
-        // }, 2000)
+        this.add.image(this.scene.systems.canvas.width / 2, this.scene.systems.canvas.height / 2, 'Logo');
+        setTimeout(() => {
+            this.scene.start('MainScene');
+        }, 2000)
     }
 }

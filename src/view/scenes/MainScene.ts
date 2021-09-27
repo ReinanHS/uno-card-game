@@ -11,15 +11,19 @@ export default class MainScene extends Phaser.Scene {
         });
     }
 
+    public preload(): void {
+        this.deckController = new DeckController(this);
+        this.deckController.start();
+    }
+
     public create(): void {
         this.scene.systems.canvas.style.transform = 'rotateX(30deg)';
 
-        this._backgroundImage = this.add.image(0, 0, 'Background')
-            .setSize(this.scene.systems.canvas.width, this.scene.systems.canvas.height)
-            .setScale(0.7)
-            .setOrigin(0,0);
+        this._backgroundImage = this.add.image(0, 0, 'Background').setOrigin(0,0);
 
-        this.deckController = new DeckController(this);
+        this._backgroundImage.displayWidth = this.sys.canvas.width;
+        this._backgroundImage.displayHeight = this.sys.canvas.height;
+
         this.deckController.create();
     }
 }
