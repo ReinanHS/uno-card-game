@@ -112,11 +112,6 @@ export default class PreloadScene extends Phaser.Scene {
     }
 
     public create() {
-        //this.scene.start('MainScene');
-
-        this.add.image(this.scene.systems.canvas.width / 2, this.scene.systems.canvas.height / 2, 'Logo');
-        setTimeout(() => {
-            this.scene.start('MainScene');
-        }, 2000)
+        this.scene.start('MainScene');
     }
 }

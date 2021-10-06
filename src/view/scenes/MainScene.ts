@@ -20,7 +20,6 @@ export default class MainScene extends Phaser.Scene {
         this.scene.systems.canvas.style.transform = 'rotateX(30deg)';
 
         this._backgroundImage = this.add.image(0, 0, 'Background').setOrigin(0,0);
-
         this._backgroundImage.displayWidth = this.sys.canvas.width;
         this._backgroundImage.displayHeight = this.sys.canvas.height;
 
