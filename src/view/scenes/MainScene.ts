@@ -1,8 +1,9 @@
 import Controller from "../../game/Controller/Controller";
 import PlayerController from "../../game/Controller/Player/PlayerController";
+import DeckController from "../../game/Controller/Deck/DeckController";
 
 export default class MainScene extends Phaser.Scene {
-    protected controllers: Controller[] = [];
+    public controllers: Controller[] = [];
 
     constructor() {
         super({
@@ -14,6 +15,7 @@ export default class MainScene extends Phaser.Scene {
 
     private buildControllers(): Controller[] {
         return [
+            new DeckController(this),
             new PlayerController(this),
         ];
     }
