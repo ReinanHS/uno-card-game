@@ -1,6 +1,7 @@
 import AbstractController from "../AbstractController";
 import CardDeck from "../../Objetcs/Entities/Cards/CardDeck";
 import Image = Phaser.GameObjects.Image;
+import DeckSprite from "../../../view/sprites/cards/DeckSprite";
 
 export default class DeckController extends AbstractController {
     private _cardDeck : CardDeck;
@@ -13,6 +14,7 @@ export default class DeckController extends AbstractController {
      */
     private _backgroundImage : Image;
     private _midCircleImage : Image;
+    private _deckSprite : DeckSprite;
 
     constructor(scene: Phaser.Scene) {
         super(scene);
@@ -29,6 +31,7 @@ export default class DeckController extends AbstractController {
 
         this._backgroundImage = this.buildBackgroundImage();
         this._midCircleImage = this.buildMidCircleImage();
+        this._deckSprite = this.buildDeckSprite();
     }
 
     private buildBackgroundImage(): Image {
@@ -44,5 +47,12 @@ export default class DeckController extends AbstractController {
         midCircleImage.setScale(1.4);
 
         return midCircleImage;
+    }
+
+    public buildDeckSprite(): DeckSprite {
+        const cardPositionX = this._widthScreen / 2;
+        const cardPositionY = this._heightScreen / 2;
+
+        return new DeckSprite(this.scene, cardPositionX, cardPositionY);
     }
 }
