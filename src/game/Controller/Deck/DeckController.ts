@@ -2,6 +2,7 @@ import AbstractController from "../AbstractController";
 import CardDeck from "../../Objetcs/Entities/Cards/CardDeck";
 import DeckSprite from "../../../view/sprites/cards/DeckSprite";
 import Image = Phaser.GameObjects.Image;
+import EventDispatcher from "../../Events/EventDispatcher";
 
 export default class DeckController extends AbstractController {
     private _cardDeck : CardDeck;
@@ -34,6 +35,10 @@ export default class DeckController extends AbstractController {
         this._backgroundImage = this.buildBackgroundImage();
         this._midCircleImage = this.buildMidCircleImage();
         this._deckSprite = this.buildDeckSprite();
+
+        this._deckSprite.on('pointerdown', () => {
+           EventDispatcher.getInstance().emit('clickDeckSprite', this._cardDeck.removeCard());
+        });
     }
 
     private buildBackgroundImage(): Image {
