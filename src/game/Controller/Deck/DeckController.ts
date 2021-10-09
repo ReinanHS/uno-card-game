@@ -1,7 +1,7 @@
 import AbstractController from "../AbstractController";
 import CardDeck from "../../Objetcs/Entities/Cards/CardDeck";
-import Image = Phaser.GameObjects.Image;
 import DeckSprite from "../../../view/sprites/cards/DeckSprite";
+import Image = Phaser.GameObjects.Image;
 
 export default class DeckController extends AbstractController {
     private _cardDeck : CardDeck;
@@ -26,6 +26,8 @@ export default class DeckController extends AbstractController {
     }
 
     public created() : void {
+        this.scene.scene.systems.canvas.style.transform = 'rotateX(30deg)';
+
         this._widthScreen = this.scene.sys.game.canvas.width;
         this._heightScreen = this.scene.sys.game.canvas.height;
 

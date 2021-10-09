@@ -15,8 +15,8 @@ export default class MainScene extends Phaser.Scene {
 
     private buildControllers(): Controller[] {
         return [
-            new PlayerController(this),
             new DeckController(this),
+            new PlayerController(this),
         ];
     }
 
@@ -26,5 +26,9 @@ export default class MainScene extends Phaser.Scene {
 
     public create(): void {
         this.controllers.map(controller => controller.created());
+    }
+
+    public update(time: number, delta: number) {
+        this.controllers.map(controller => controller.update(time, delta));
     }
 }
