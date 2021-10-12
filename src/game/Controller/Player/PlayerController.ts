@@ -9,6 +9,7 @@ import Image = Phaser.GameObjects.Image;
 import Graphics = Phaser.GameObjects.Graphics;
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import Text = Phaser.GameObjects.Text;
+import {addCard} from "../../Utilitys/helpers";
 
 export default class PlayerController extends AbstractController {
     private _player: Player;
@@ -42,6 +43,8 @@ export default class PlayerController extends AbstractController {
     }
 
     private addHandCardsSprite(card: Card, x: number, y: number): void {
+        this._isActionActive = true;
+
         let cardSprite: CardSprite = new CardSprite(this.scene, x, y, card);
         cardSprite.on('pointerdown', () => {
             EventDispatcher.getInstance().emit('playCard', this._player, cardSprite.card);
@@ -56,47 +59,12 @@ export default class PlayerController extends AbstractController {
             cardSprite.setDepth(this._player.handCards.findIndex(item => cardSprite.card == item));
         });
 
-        if (this._handCardsSprite.length === 0) {
-            this.scene.tweens.add({
-                targets: cardSprite,
-                x: this._player.positions.cardPositionX,
-                y: this._player.positions.cardPositionY,
-                angle: this._player.positions.cardRotation,
-                ease: 'Power1',
-                duration: 1000,
-                onStart: () => {
-                    this._isActionActive = true;
-                },
-                onComplete: () => {
-                    cardSprite.setInteractive({cursor: 'pointer'});
-                    this._isActionActive = false;
-                },
-            });
-        } else {
-            let {x, y, displayWidth} = this._handCardsSprite.length % 2 === 0 ?
-                this._handCardsSprite.at(this._handCardsSprite.length - 2) :
-                this._handCardsSprite.at(this._handCardsSprite.length - 2);
+        setTimeout(() => {
+            cardSprite.setInteractive({ cursor: 'Pointer'})
+            this._isActionActive = false;
+        }, 1000);
 
-            displayWidth = (this._handCardsSprite.length + 20) - displayWidth;
-            x = this._handCardsSprite.length % 2 === 0 ? x - displayWidth : x + displayWidth;
-            y += Phaser.Math.Between(-4, 4);
-
-            this.scene.tweens.add({
-                targets: cardSprite,
-                x: x,
-                y: y,
-                angle: this._player.positions.cardRotation,
-                ease: 'Power1',
-                duration: 1000,
-                onStart: () => {
-                    this._isActionActive = true;
-                },
-                onComplete: () => {
-                    cardSprite.setInteractive({cursor: 'pointer'});
-                    this._isActionActive = false;
-                },
-            });
-        }
+        addCard(this.scene, cardSprite, this._player, this._handCardsSprite);
 
         this._handCardsSprite.push(cardSprite);
     }

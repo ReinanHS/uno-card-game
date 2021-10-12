@@ -6,6 +6,11 @@ import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import Image = Phaser.GameObjects.Image;
 import Graphics = Phaser.GameObjects.Graphics;
 import Text = Phaser.GameObjects.Text;
+import EventDispatcher from "../../Events/EventDispatcher";
+import Card from "../../Objetcs/Entities/Cards/Card";
+import CardSprite from "../../../view/sprites/cards/CardSprite";
+import {addCard} from "../../Utilitys/helpers";
+import HandCardsSpriteList from "../../Objetcs/Entities/Player/HandCardsSpriteList";
 
 export default class BotController extends AbstractController {
     private _bots: Array<Bot> = new Array<Bot>();
@@ -22,6 +27,13 @@ export default class BotController extends AbstractController {
     public created(): void {
         this.buildBots();
         this._bots.forEach(bot => this.buildBotGUI(bot));
+
+        EventDispatcher.getInstance().on('clickDeckSprite', (card: Card, x: number, y: number) => {
+            this._bots.forEach(bot => {
+                bot.handCards.push(card);
+                this.addHandCardsSprite(bot, card, x, y);
+            });
+        });
     }
 
     private buildBots(): void {
@@ -36,6 +48,7 @@ export default class BotController extends AbstractController {
 
         let bot: Bot = new Bot(`Bot ${index}`, `https://avatars.dicebear.com/api/big-ears-neutral/${index}.svg?size=84`, handCard, index);
         bot.positions = playerPosition;
+        bot.handCardsSprite = new HandCardsSpriteList();
 
         return bot;
     }
@@ -83,5 +96,11 @@ export default class BotController extends AbstractController {
                 font: '16px monospace',
             }
         }).setOrigin(0.5, 0.5);
+    }
+
+    private addHandCardsSprite(bot: Bot, card: Card, x: number, y: number): void {
+        let cardSprite: CardSprite = new CardSprite(this.scene, x, y, card);
+        addCard(this.scene, cardSprite, bot, bot.handCardsSprite.sprites);
+        bot.handCardsSprite.addSprite(cardSprite);
     }
 }
