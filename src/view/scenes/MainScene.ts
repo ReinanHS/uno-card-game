@@ -17,8 +17,8 @@ export default class MainScene extends Phaser.Scene {
     private buildControllers(): Controller[] {
         return [
             new DeckController(this),
-            new PlayerController(this),
             new BotController(this),
+            new PlayerController(this),
         ];
     }
 

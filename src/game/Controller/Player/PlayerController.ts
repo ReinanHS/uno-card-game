@@ -10,6 +10,7 @@ import Graphics = Phaser.GameObjects.Graphics;
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import Text = Phaser.GameObjects.Text;
 import {addCard} from "../../Utilitys/helpers";
+import Layer = Phaser.GameObjects.Layer;
 
 export default class PlayerController extends AbstractController {
     private _player: Player;
@@ -22,12 +23,18 @@ export default class PlayerController extends AbstractController {
 
     private _isActionActive: boolean = false;
 
+    private _layerGUI : Layer;
+    private _layerCards : Layer;
+
     constructor(scene: Phaser.Scene) {
         super(scene);
     }
 
     public created(): void {
         this._player = this.buildPlayer();
+        this._layerCards = this.scene.add.layer();
+        this._layerGUI = this.scene.add.layer();
+
         this.buildPlayerGUI(this._player);
 
         EventDispatcher.getInstance().on('clickDeckSprite', (card: Card, x: number, y: number) => {
@@ -46,6 +53,8 @@ export default class PlayerController extends AbstractController {
         this._isActionActive = true;
 
         let cardSprite: CardSprite = new CardSprite(this.scene, x, y, card);
+        this._layerCards.add(cardSprite);
+
         cardSprite.on('pointerdown', () => {
             EventDispatcher.getInstance().emit('playCard', this._player, cardSprite.card);
         });
@@ -122,5 +131,10 @@ export default class PlayerController extends AbstractController {
                 font: '16px monospace',
             }
         }).setOrigin(0.5, 0.5);
+
+        this._layerGUI.add(this._circleGraphics);
+        this._layerGUI.add(this._photoImage);
+        this._layerGUI.add(this._textName);
+        this._layerGUI.add(this._textInfo);
     }
 }

@@ -11,6 +11,7 @@ import Card from "../../Objetcs/Entities/Cards/Card";
 import CardSprite from "../../../view/sprites/cards/CardSprite";
 import {addCard} from "../../Utilitys/helpers";
 import HandCardsSpriteList from "../../Objetcs/Entities/Player/HandCardsSpriteList";
+import Layer = Phaser.GameObjects.Layer;
 
 export default class BotController extends AbstractController {
     private _bots: Array<Bot> = new Array<Bot>();
@@ -20,12 +21,18 @@ export default class BotController extends AbstractController {
     private _textName: Array<Text> = new Array<Text>();
     private _textInfo: Array<Text> = new Array<Text>();
 
+    private _layerGUI : Layer;
+    private _layerCards : Layer;
+
     constructor(scene: Phaser.Scene) {
         super(scene);
     }
 
     public created(): void {
         this.buildBots();
+        this._layerCards = this.scene.add.layer();
+        this._layerGUI = this.scene.add.layer();
+
         this._bots.forEach(bot => this.buildBotGUI(bot));
 
         EventDispatcher.getInstance().on('clickDeckSprite', (card: Card, x: number, y: number) => {
@@ -96,10 +103,17 @@ export default class BotController extends AbstractController {
                 font: '16px monospace',
             }
         }).setOrigin(0.5, 0.5);
+
+        this._layerGUI.add(this._circleGraphics[bot.positionIndex]);
+        this._layerGUI.add(this._photoImage[bot.positionIndex]);
+        this._layerGUI.add(this._textName[bot.positionIndex]);
+        this._layerGUI.add(this._textInfo[bot.positionIndex]);
     }
 
     private addHandCardsSprite(bot: Bot, card: Card, x: number, y: number): void {
         let cardSprite: CardSprite = new CardSprite(this.scene, x, y, card);
+        this._layerCards.add(cardSprite);
+
         addCard(this.scene, cardSprite, bot, bot.handCardsSprite.sprites);
         bot.handCardsSprite.addSprite(cardSprite);
     }
