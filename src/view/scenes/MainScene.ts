@@ -1,6 +1,7 @@
 import Controller from "../../game/Controller/Controller";
 import PlayerController from "../../game/Controller/Player/PlayerController";
 import DeckController from "../../game/Controller/Deck/DeckController";
+import BotController from "../../game/Controller/Bots/BotController";
 
 export default class MainScene extends Phaser.Scene {
     public controllers: Controller[] = [];
@@ -17,6 +18,7 @@ export default class MainScene extends Phaser.Scene {
         return [
             new DeckController(this),
             new PlayerController(this),
+            new BotController(this),
         ];
     }
 
