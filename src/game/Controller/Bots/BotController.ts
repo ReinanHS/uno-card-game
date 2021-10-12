@@ -12,6 +12,7 @@ import CardSprite from "../../../view/sprites/cards/CardSprite";
 import {addCard} from "../../Utilitys/helpers";
 import HandCardsSpriteList from "../../Objetcs/Entities/Player/HandCardsSpriteList";
 import Layer = Phaser.GameObjects.Layer;
+import Player from "../../Objetcs/Entities/Player/Player";
 
 export default class BotController extends AbstractController {
     private _bots: Array<Bot> = new Array<Bot>();
@@ -21,8 +22,8 @@ export default class BotController extends AbstractController {
     private _textName: Array<Text> = new Array<Text>();
     private _textInfo: Array<Text> = new Array<Text>();
 
-    private _layerGUI : Layer;
-    private _layerCards : Layer;
+    private _layerGUI: Layer;
+    private _layerCards: Layer;
 
     constructor(scene: Phaser.Scene) {
         super(scene);
@@ -33,7 +34,10 @@ export default class BotController extends AbstractController {
         this._layerCards = this.scene.add.layer();
         this._layerGUI = this.scene.add.layer();
 
-        this._bots.forEach(bot => this.buildBotGUI(bot));
+        this._bots.forEach(bot => {
+            this.buildBotGUI(bot);
+            EventDispatcher.getInstance().emit('addPlayer', bot);
+        });
 
         EventDispatcher.getInstance().on('clickDeckSprite', (card: Card, x: number, y: number) => {
             this._bots.forEach(bot => {
@@ -41,11 +45,31 @@ export default class BotController extends AbstractController {
                 this.addHandCardsSprite(bot, card, x, y);
             });
         });
+
+        EventDispatcher.getInstance().on('startPlay', (player: Player) => {
+            let bot: Bot = this._bots.find(bot => bot.positionIndex === player.positionIndex);
+            if (bot !== undefined) {
+                this._textInfo[bot.positionIndex].text = "Playing";
+                let time = 10;
+
+                let refreshIntervalId = setInterval(() => {
+                    time -= 1;
+                    this._textInfo[bot.positionIndex].text = `Playing (${time})`;
+
+                    if(time <= 0){
+                        clearInterval(refreshIntervalId);
+                        this._textInfo[bot.positionIndex].text = `Waiting`;
+                        EventDispatcher.getInstance().emit('nextPlay')
+                    }
+
+                }, 1000)
+            }
+        });
     }
 
     private buildBots(): void {
         for (let i = 0; i < 3; i++) {
-            this._bots.push(this.buildBot(i+1));
+            this._bots.push(this.buildBot(i + 1));
         }
     }
 
@@ -60,11 +84,11 @@ export default class BotController extends AbstractController {
         return bot;
     }
 
-    private buildBotGUI(bot: Bot){
+    private buildBotGUI(bot: Bot) {
         const photoPlayerKey = `photo_player_${bot.positionIndex}`;
         const radius: number = Math.min(84, 84) / 2;
 
-        this._circleGraphics[bot.positionIndex]  = this.scene.add.graphics()
+        this._circleGraphics[bot.positionIndex] = this.scene.add.graphics()
             .setPosition(bot.positions.uiPositionX - 40, bot.positions.uiPositionY + (bot.positionIndex == 2 ? -40 : +40))
             .fillCircle(0, 0, radius);
 

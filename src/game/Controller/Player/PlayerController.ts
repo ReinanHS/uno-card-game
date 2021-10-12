@@ -11,6 +11,7 @@ import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import Text = Phaser.GameObjects.Text;
 import {addCard} from "../../Utilitys/helpers";
 import Layer = Phaser.GameObjects.Layer;
+import Bot from "../../Objetcs/Entities/Bot/Bot";
 
 export default class PlayerController extends AbstractController {
     private _player: Player;
@@ -22,6 +23,7 @@ export default class PlayerController extends AbstractController {
     private _textInfo: Text;
 
     private _isActionActive: boolean = false;
+    private _isSelect : boolean = false;
 
     private _layerGUI : Layer;
     private _layerCards : Layer;
@@ -43,10 +45,33 @@ export default class PlayerController extends AbstractController {
                 this.addHandCardsSprite(card, x, y);
             }
         });
+
+        EventDispatcher.getInstance().emit('addPlayer', this._player);
+        EventDispatcher.getInstance().on('startPlay', (player: Player) => {
+            if (this._player.positionIndex === player.positionIndex) {
+                this._isSelect = true;
+                this._textInfo.text = "Playing";
+                let time = 10;
+
+                let refreshIntervalId = setInterval(() => {
+                    time -= 1;
+                    this._textInfo.text = `Playing (${time})`;
+
+                    if(time <= 0){
+                        clearInterval(refreshIntervalId);
+                        this._isSelect = false;
+                        EventDispatcher.getInstance().emit('nextPlay')
+                    }
+
+                }, 1000)
+            }
+        });
     }
 
     public update(time: number, delta: number): void {
-        this._textInfo.text = `${this._player.handCards.length} cards`;
+        if(!this._isSelect){
+            this._textInfo.text = `${this._player.handCards.length} cards`;
+        }
     }
 
     private addHandCardsSprite(card: Card, x: number, y: number): void {
