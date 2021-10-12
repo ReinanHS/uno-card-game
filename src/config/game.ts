@@ -11,6 +11,12 @@ export const config : object = {
         width: 1280,
         height: 720
     },
+    physics: {
+        default: 'matter',
+        matter: {
+            debug: true
+        }
+    },
     pixelArt: true,
     scene: scenes,
 }
