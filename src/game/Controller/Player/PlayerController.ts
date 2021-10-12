@@ -3,12 +3,12 @@ import Player from "../../Objetcs/Entities/Player/Player";
 import EventDispatcher from "../../Events/EventDispatcher";
 import PlayerPosition from "../../Objetcs/Entities/Player/PlayerPosition";
 import HandCardList from "../../Objetcs/Entities/Player/HandCardList";
+import Card from "../../Objetcs/Entities/Cards/Card";
+import CardSprite from "../../../view/sprites/cards/CardSprite";
 import Image = Phaser.GameObjects.Image;
 import Graphics = Phaser.GameObjects.Graphics;
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import Text = Phaser.GameObjects.Text;
-import Card from "../../Objetcs/Entities/Cards/Card";
-import CardSprite from "../../../view/sprites/cards/CardSprite";
 
 export default class PlayerController extends AbstractController {
     private _player: Player;
@@ -19,6 +19,8 @@ export default class PlayerController extends AbstractController {
     private _textName: Text;
     private _textInfo: Text;
 
+    private _isActionActive: boolean = false;
+
     constructor(scene: Phaser.Scene) {
         super(scene);
     }
@@ -27,9 +29,11 @@ export default class PlayerController extends AbstractController {
         this._player = this.buildPlayer();
         this.buildPlayerGUI(this._player);
 
-        EventDispatcher.getInstance().on('clickDeckSprite', (card: Card) => {
-            this._player.handCards.push(card);
-            this.addHandCardsSprite(card);
+        EventDispatcher.getInstance().on('clickDeckSprite', (card: Card, x: number, y: number) => {
+            if (!this._isActionActive) {
+                this._player.handCards.push(card);
+                this.addHandCardsSprite(card, x, y);
+            }
         });
     }
 
@@ -37,22 +41,48 @@ export default class PlayerController extends AbstractController {
         this._textInfo.text = `${this._player.handCards.length} cards`;
     }
 
-    public addHandCardsSprite(card: Card): void {
-        let cardSprite: CardSprite;
+    private addHandCardsSprite(card: Card, x: number, y: number): void {
+        let cardSprite: CardSprite = new CardSprite(this.scene, x, y, card);
 
         if (this._handCardsSprite.length === 0) {
-            cardSprite = new CardSprite(this.scene, this._player.positions.cardPositionX, this._player.positions.cardPositionY, card);
+            this.scene.tweens.add({
+                targets: cardSprite,
+                x: this._player.positions.cardPositionX,
+                y: this._player.positions.cardPositionY,
+                angle: this._player.positions.cardRotation,
+                ease: 'Power1',
+                duration: 1000,
+                onStart: () => {
+                    this._isActionActive = true;
+                },
+                onComplete: () => {
+                    this._isActionActive = false;
+                },
+            });
         } else {
             let {x, y, displayWidth} = this._handCardsSprite.length % 2 === 0 ?
                 this._handCardsSprite.at(this._handCardsSprite.length - 2) :
                 this._handCardsSprite.at(this._handCardsSprite.length - 2);
 
+            displayWidth = (this._handCardsSprite.length + 20) - displayWidth;
             x = this._handCardsSprite.length % 2 === 0 ? x - displayWidth : x + displayWidth;
+            y += Phaser.Math.Between(-4, 4);
 
-            cardSprite = new CardSprite(this.scene, x, y, card);
+            this.scene.tweens.add({
+                targets: cardSprite,
+                x: x,
+                y: y,
+                angle: this._player.positions.cardRotation,
+                ease: 'Power1',
+                duration: 1000,
+                onStart: () => {
+                    this._isActionActive = true;
+                },
+                onComplete: () => {
+                    this._isActionActive = false;
+                },
+            });
         }
-
-        cardSprite.setAngle(this._player.positions.cardRotation);
 
         this._handCardsSprite.push(cardSprite);
     }

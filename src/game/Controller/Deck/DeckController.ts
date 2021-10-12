@@ -37,7 +37,7 @@ export default class DeckController extends AbstractController {
         this._deckSprite = this.buildDeckSprite();
 
         this._deckSprite.on('pointerdown', () => {
-           EventDispatcher.getInstance().emit('clickDeckSprite', this._cardDeck.removeCard());
+           EventDispatcher.getInstance().emit('clickDeckSprite', this._cardDeck.removeCard(), this._deckSprite.x, this._deckSprite.y);
         });
     }
 
