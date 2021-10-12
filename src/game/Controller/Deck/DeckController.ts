@@ -3,6 +3,8 @@ import CardDeck from "../../Objetcs/Entities/Cards/CardDeck";
 import DeckSprite from "../../../view/sprites/cards/DeckSprite";
 import Image = Phaser.GameObjects.Image;
 import EventDispatcher from "../../Events/EventDispatcher";
+import Player from "../../Objetcs/Entities/Player/Player";
+import Card from "../../Objetcs/Entities/Cards/Card";
 
 export default class DeckController extends AbstractController {
     private _cardDeck : CardDeck;
@@ -38,6 +40,10 @@ export default class DeckController extends AbstractController {
 
         this._deckSprite.on('pointerdown', () => {
            EventDispatcher.getInstance().emit('clickDeckSprite', this._cardDeck.removeCard(), this._deckSprite.x, this._deckSprite.y);
+        });
+
+        EventDispatcher.getInstance().on('playCard', (player: Player, card: Card) => {
+            console.log(player, card);
         });
     }
 

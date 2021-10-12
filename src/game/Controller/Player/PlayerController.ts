@@ -43,6 +43,18 @@ export default class PlayerController extends AbstractController {
 
     private addHandCardsSprite(card: Card, x: number, y: number): void {
         let cardSprite: CardSprite = new CardSprite(this.scene, x, y, card);
+        cardSprite.on('pointerdown', () => {
+            EventDispatcher.getInstance().emit('playCard', this._player, cardSprite.card);
+        });
+        cardSprite.on('pointerover', () => {
+            cardSprite.setDepth(this._player.handCards.length);
+            cardSprite.setScale(0.25)
+        });
+        cardSprite.on('pointerout',  () => {
+            cardSprite.clearTint();
+            cardSprite.setScale(0.2)
+            cardSprite.setDepth(this._player.handCards.findIndex(item => cardSprite.card == item));
+        });
 
         if (this._handCardsSprite.length === 0) {
             this.scene.tweens.add({
@@ -56,6 +68,7 @@ export default class PlayerController extends AbstractController {
                     this._isActionActive = true;
                 },
                 onComplete: () => {
+                    cardSprite.setInteractive({cursor: 'pointer'});
                     this._isActionActive = false;
                 },
             });
@@ -79,6 +92,7 @@ export default class PlayerController extends AbstractController {
                     this._isActionActive = true;
                 },
                 onComplete: () => {
+                    cardSprite.setInteractive({cursor: 'pointer'});
                     this._isActionActive = false;
                 },
             });
