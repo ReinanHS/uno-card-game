@@ -10,9 +10,6 @@ import Image = Phaser.GameObjects.Image;
 export default class DeckController extends AbstractController {
     private _cardDeck: CardDeck;
 
-    private _widthScreen: number;
-    private _heightScreen: number;
-
     /**
      * Game Objects
      */
@@ -42,7 +39,7 @@ export default class DeckController extends AbstractController {
      * Method for adding events
      * @private
      */
-    private callEvents(): void {
+    protected callEvents(): void {
         this._deckSprite.on('pointerdown', () => {
             EventDispatcher.getInstance().emit('clickDeckSprite', this._cardDeck.removeCard(), this._deckSprite.x, this._deckSprite.y);
         });
@@ -67,7 +64,7 @@ export default class DeckController extends AbstractController {
      * Method for creating the elements
      * @private
      */
-    private buildElements(): void {
+    protected buildElements(): void {
         this._backgroundImage = this.buildBackgroundImage();
         this._midCircleImage = this.buildMidCircleImage();
         this._deckSprite = this.buildDeckSprite();
@@ -77,13 +74,9 @@ export default class DeckController extends AbstractController {
      * Method for creating the on-screen elements
      */
     public created(): void {
+        super.created();
+
         this.scene.scene.systems.canvas.style.transform = 'rotateX(30deg)';
-
-        this._widthScreen = this.scene.sys.game.canvas.width;
-        this._heightScreen = this.scene.sys.game.canvas.height;
-
-        this.buildElements();
-        this.callEvents();
     }
 
     /**

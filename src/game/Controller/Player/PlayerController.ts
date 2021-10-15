@@ -5,13 +5,12 @@ import PlayerPosition from "../../Objetcs/Entities/Player/PlayerPosition";
 import HandCardList from "../../Objetcs/Entities/Player/HandCardList";
 import Card from "../../Objetcs/Entities/Cards/Card";
 import CardSprite from "../../../view/sprites/cards/CardSprite";
+import {addCard} from "../../Utilitys/helpers";
 import Image = Phaser.GameObjects.Image;
 import Graphics = Phaser.GameObjects.Graphics;
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import Text = Phaser.GameObjects.Text;
-import {addCard} from "../../Utilitys/helpers";
 import Layer = Phaser.GameObjects.Layer;
-import Bot from "../../Objetcs/Entities/Bot/Bot";
 
 export default class PlayerController extends AbstractController {
     private _player: Player;
@@ -23,22 +22,20 @@ export default class PlayerController extends AbstractController {
     private _textInfo: Text;
 
     private _isActionActive: boolean = false;
-    private _isSelect : boolean = false;
+    private _isSelect: boolean = false;
 
-    private _layerGUI : Layer;
-    private _layerCards : Layer;
+    private _layerGUI: Layer;
+    private _layerCards: Layer;
 
     constructor(scene: Phaser.Scene) {
         super(scene);
     }
 
-    public created(): void {
-        this._player = this.buildPlayer();
-        this._layerCards = this.scene.add.layer();
-        this._layerGUI = this.scene.add.layer();
-
-        this.buildPlayerGUI(this._player);
-
+    /**
+     * Method for adding events
+     * @private
+     */
+    protected callEvents() {
         EventDispatcher.getInstance().on('clickDeckSprite', (card: Card, x: number, y: number) => {
             if (!this._isActionActive) {
                 this._player.handCards.push(card);
@@ -57,7 +54,7 @@ export default class PlayerController extends AbstractController {
                     time -= 1;
                     this._textInfo.text = `Playing (${time})`;
 
-                    if(time <= 0){
+                    if (time <= 0) {
                         clearInterval(refreshIntervalId);
                         this._isSelect = false;
                         EventDispatcher.getInstance().emit('nextPlay')
@@ -68,12 +65,36 @@ export default class PlayerController extends AbstractController {
         });
     }
 
+    /**
+     * Method for creating the elements
+     * @private
+     */
+    protected buildElements() {
+        this._layerCards = this.scene.add.layer();
+        this._layerGUI = this.scene.add.layer();
+        this._player = this.buildPlayer();
+
+        this.buildPlayerGUI(this._player);
+    }
+
+    /**
+     * Method that is called on each frame
+     * @param time
+     * @param delta
+     */
     public update(time: number, delta: number): void {
-        if(!this._isSelect){
+        if (!this._isSelect) {
             this._textInfo.text = `${this._player.handCards.length} cards`;
         }
     }
 
+    /**
+     * Method for adding a card to the player's hand
+     * @param card
+     * @param x
+     * @param y
+     * @private
+     */
     private addHandCardsSprite(card: Card, x: number, y: number): void {
         this._isActionActive = true;
 
@@ -87,14 +108,14 @@ export default class PlayerController extends AbstractController {
             cardSprite.setDepth(this._player.handCards.length);
             cardSprite.setScale(0.25)
         });
-        cardSprite.on('pointerout',  () => {
+        cardSprite.on('pointerout', () => {
             cardSprite.clearTint();
             cardSprite.setScale(0.2)
             cardSprite.setDepth(this._player.handCards.findIndex(item => cardSprite.card == item));
         });
 
         setTimeout(() => {
-            cardSprite.setInteractive({ cursor: 'Pointer'})
+            cardSprite.setInteractive({cursor: 'Pointer'})
             this._isActionActive = false;
         }, 1000);
 
@@ -103,6 +124,10 @@ export default class PlayerController extends AbstractController {
         this._handCardsSprite.push(cardSprite);
     }
 
+    /**
+     * Method to create a player
+     * @private
+     */
     private buildPlayer(): Player {
         const playerPosition: PlayerPosition = new PlayerPosition(0, this.scene);
         let handCard: HandCardList = new HandCardList();
@@ -113,6 +138,11 @@ export default class PlayerController extends AbstractController {
         return player;
     }
 
+    /**
+     * Method for creating the interface for the player
+     * @param player
+     * @private
+     */
     private buildPlayerGUI(player: Player): void {
         const photoPlayerKey = `photo_player_${player.positionIndex}`;
         const radius: number = Math.min(84, 84) / 2;
