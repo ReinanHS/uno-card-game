@@ -1,12 +1,11 @@
 import AbstractController from "../AbstractController";
 import CardDeck from "../../Objetcs/Entities/Cards/CardDeck";
 import DeckSprite from "../../../view/sprites/cards/DeckSprite";
-import Image = Phaser.GameObjects.Image;
 import EventDispatcher from "../../Events/EventDispatcher";
 import Player from "../../Objetcs/Entities/Player/Player";
 import Card from "../../Objetcs/Entities/Cards/Card";
 import PlayerRoundIterator from "../../Objetcs/Entities/Player/PlayerRoundIterator";
-import Bot from "../../Objetcs/Entities/Bot/Bot";
+import Image = Phaser.GameObjects.Image;
 
 export default class DeckController extends AbstractController {
     private _cardDeck: CardDeck;
@@ -29,6 +28,9 @@ export default class DeckController extends AbstractController {
         super(scene);
     }
 
+    /**
+     * Method called when creating controller
+     */
     public beforeCreate(): void {
         this._cardDeck = new CardDeck();
         this._cardDeck.shuffle();
@@ -36,16 +38,11 @@ export default class DeckController extends AbstractController {
         this._playerRoundIterator = new PlayerRoundIterator([]);
     }
 
-    public created(): void {
-        this.scene.scene.systems.canvas.style.transform = 'rotateX(30deg)';
-
-        this._widthScreen = this.scene.sys.game.canvas.width;
-        this._heightScreen = this.scene.sys.game.canvas.height;
-
-        this._backgroundImage = this.buildBackgroundImage();
-        this._midCircleImage = this.buildMidCircleImage();
-        this._deckSprite = this.buildDeckSprite();
-
+    /**
+     * Method for adding events
+     * @private
+     */
+    private callEvents(): void {
         this._deckSprite.on('pointerdown', () => {
             EventDispatcher.getInstance().emit('clickDeckSprite', this._cardDeck.removeCard(), this._deckSprite.x, this._deckSprite.y);
         });
@@ -66,6 +63,34 @@ export default class DeckController extends AbstractController {
         });
     }
 
+    /**
+     * Method for creating the elements
+     * @private
+     */
+    private buildElements(): void {
+        this._backgroundImage = this.buildBackgroundImage();
+        this._midCircleImage = this.buildMidCircleImage();
+        this._deckSprite = this.buildDeckSprite();
+    }
+
+    /**
+     * Method for creating the on-screen elements
+     */
+    public created(): void {
+        this.scene.scene.systems.canvas.style.transform = 'rotateX(30deg)';
+
+        this._widthScreen = this.scene.sys.game.canvas.width;
+        this._heightScreen = this.scene.sys.game.canvas.height;
+
+        this.buildElements();
+        this.callEvents();
+    }
+
+    /**
+     * Method that is called on each frame
+     * @param time
+     * @param delta
+     */
     public update(time: number, delta: number): void {
         if (this._playerRoundIterator.players.length === 4 && !this._isGamePlayStart) {
             this._isGamePlayStart = true;
@@ -73,10 +98,19 @@ export default class DeckController extends AbstractController {
         }
     }
 
-    private sendNextPlayEvent(): void {
-        EventDispatcher.getInstance().emit('startPlay', this._playerRoundIterator.currentPlayer);
+    /**
+     * Method for calling the next player to play
+     * @private
+     */
+    private sendNextPlayEvent(): boolean {
+        return EventDispatcher.getInstance().emit('startPlay', this._playerRoundIterator.currentPlayer);
     }
 
+    /**
+     * Method for adding player cards
+     * @param index
+     * @private
+     */
     private addCardToPlayer(index: number = 0): void {
         setTimeout(() => {
             EventDispatcher.getInstance().emit('clickDeckSprite', this._cardDeck.removeCard(), this._deckSprite.x, this._deckSprite.y);
@@ -92,7 +126,10 @@ export default class DeckController extends AbstractController {
         }, 1100);
     }
 
-
+    /**
+     * Method for creating the desktop background image
+     * @private
+     */
     private buildBackgroundImage(): Image {
         let backgroundImage: Image = this.scene.add.image(0, 0, 'Background').setOrigin(0, 0);
         backgroundImage.displayWidth = this._widthScreen;
@@ -101,6 +138,10 @@ export default class DeckController extends AbstractController {
         return backgroundImage;
     }
 
+    /**
+     * Method for creating the circle in the middle of the table
+     * @private
+     */
     private buildMidCircleImage(): Image {
         let midCircleImage: Image = this.scene.add.sprite(this._widthScreen / 2 + 24, this._heightScreen / 2 + 15, 'white-circle');
         midCircleImage.setScale(1.4);
@@ -108,6 +149,9 @@ export default class DeckController extends AbstractController {
         return midCircleImage;
     }
 
+    /**
+     * Method for creating the deck
+     */
     public buildDeckSprite(): DeckSprite {
         const cardPositionX = this._widthScreen / 2;
         const cardPositionY = this._heightScreen / 2;
