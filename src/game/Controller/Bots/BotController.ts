@@ -39,32 +39,34 @@ export default class BotController extends AbstractController {
             EventDispatcher.getInstance().emit('addPlayer', bot);
         });
 
-        EventDispatcher.getInstance().on('clickDeckSprite', (card: Card, x: number, y: number) => {
+        EventDispatcher.getInstance().on('clickDeckSprite', (player: Player, card: Card, x: number, y: number) => {
             this._bots.forEach(bot => {
-                bot.handCards.push(card);
-                this.addHandCardsSprite(bot, card, x, y);
+                if(bot.positionIndex == player.positionIndex){
+                    bot.handCards.push(card);
+                    this.addHandCardsSprite(bot, card, x, y);
+                }
             });
         });
-
-        EventDispatcher.getInstance().on('startPlay', (player: Player) => {
-            let bot: Bot = this._bots.find(bot => bot.positionIndex === player.positionIndex);
-            if (bot !== undefined) {
-                this._textInfo[bot.positionIndex].text = "Playing";
-                let time = 10;
-
-                let refreshIntervalId = setInterval(() => {
-                    time -= 1;
-                    this._textInfo[bot.positionIndex].text = `Playing (${time})`;
-
-                    if(time <= 0){
-                        clearInterval(refreshIntervalId);
-                        this._textInfo[bot.positionIndex].text = `Waiting`;
-                        EventDispatcher.getInstance().emit('nextPlay')
-                    }
-
-                }, 1000)
-            }
-        });
+        //
+        // EventDispatcher.getInstance().on('startPlay', (player: Player) => {
+        //     let bot: Bot = this._bots.find(bot => bot.positionIndex === player.positionIndex);
+        //     if (bot !== undefined) {
+        //         this._textInfo[bot.positionIndex].text = "Playing";
+        //         let time = 10;
+        //
+        //         let refreshIntervalId = setInterval(() => {
+        //             time -= 1;
+        //             this._textInfo[bot.positionIndex].text = `Playing (${time})`;
+        //
+        //             if(time <= 0){
+        //                 clearInterval(refreshIntervalId);
+        //                 this._textInfo[bot.positionIndex].text = `Waiting`;
+        //                 EventDispatcher.getInstance().emit('nextPlay')
+        //             }
+        //
+        //         }, 1000)
+        //     }
+        // });
     }
 
     private buildBots(): void {
@@ -138,7 +140,10 @@ export default class BotController extends AbstractController {
         let cardSprite: CardSprite = new CardSprite(this.scene, x, y, card);
         this._layerCards.add(cardSprite);
 
-        addCard(this.scene, cardSprite, bot, bot.handCardsSprite.sprites);
+        addCard(this.scene, cardSprite, bot, bot.handCardsSprite.sprites).then(() => {
+            EventDispatcher.getInstance().emit('addCardFinished', bot, cardSprite);
+        });
+
         bot.handCardsSprite.addSprite(cardSprite);
     }
 }

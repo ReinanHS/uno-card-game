@@ -6,6 +6,7 @@ import Player from "../../Objetcs/Entities/Player/Player";
 import Card from "../../Objetcs/Entities/Cards/Card";
 import PlayerRoundIterator from "../../Objetcs/Entities/Player/PlayerRoundIterator";
 import Image = Phaser.GameObjects.Image;
+import CardSprite from "../../../view/sprites/cards/CardSprite";
 
 export default class DeckController extends AbstractController {
     private _cardDeck: CardDeck;
@@ -87,7 +88,9 @@ export default class DeckController extends AbstractController {
     public update(time: number, delta: number): void {
         if (this._playerRoundIterator.players.length === 4 && !this._isGamePlayStart) {
             this._isGamePlayStart = true;
-            this.addCardToPlayer();
+            this.addCardsToAllPlayers().then(() => {
+                alert('Starting the game');
+            });
         }
     }
 
@@ -100,23 +103,62 @@ export default class DeckController extends AbstractController {
     }
 
     /**
-     * Method for adding player cards
+     * Method for adding starting cards for players
+     * @param limitCards
+     * @private
+     */
+    private async addCardsToAllPlayers(limitCards: number = 7): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            for (let player of this._playerRoundIterator.players) {
+                await this.addStartCards(player, limitCards);
+            }
+
+            resolve(true);
+        });
+    }
+
+    /**
+     * Method for adding starting cards for a player
+     * @param player
+     * @param limitCards
      * @param index
      * @private
      */
-    private addCardToPlayer(index: number = 0): void {
-        setTimeout(() => {
-            EventDispatcher.getInstance().emit('clickDeckSprite', this._cardDeck.removeCard(), this._deckSprite.x, this._deckSprite.y);
+    private async addStartCards(player: Player, limitCards: number, index: number = 0): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            await this.addCardToPlayer(player);
 
-            if (index === 5) {
-                this.sendNextPlayEvent();
+            if (index < limitCards) {
+                const result: boolean = await this.addStartCards(player, limitCards, index + 1);
+
+                resolve(result);
             }
 
-            if (index < 6) {
-                this.addCardToPlayer(index + 1);
-            }
+            resolve(true);
+        });
+    }
 
-        }, 1100);
+    /**
+     * Method for adding player cards
+     * @param player
+     * @private
+     */
+    private async addCardToPlayer(player: Player): Promise<CardSprite> {
+
+        return new Promise((resolve, reject) => {
+            const isEventDispatche: boolean = EventDispatcher.getInstance()
+                .emit('clickDeckSprite', player, this._cardDeck.removeCard(), this._deckSprite.x, this._deckSprite.y);
+
+            if (isEventDispatche) {
+
+                EventDispatcher.getInstance().on('addCardFinished', (player: Player, cardSprite: CardSprite) => {
+                    return resolve(cardSprite);
+                });
+
+            } else {
+                reject();
+            }
+        });
     }
 
     /**

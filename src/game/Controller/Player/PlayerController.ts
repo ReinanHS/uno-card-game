@@ -36,11 +36,13 @@ export default class PlayerController extends AbstractController {
      * @private
      */
     protected callEvents() {
-        EventDispatcher.getInstance().on('clickDeckSprite', (card: Card, x: number, y: number) => {
-            if (!this._isActionActive) {
+        EventDispatcher.getInstance().on('clickDeckSprite', (player: Player, card: Card, x: number, y: number) => {
+            if (!this._isActionActive && player.positionIndex == this._player.positionIndex) {
                 this._player.handCards.push(card);
                 this.addHandCardsSprite(card, x, y);
             }
+
+            return true;
         });
 
         EventDispatcher.getInstance().emit('addPlayer', this._player);
@@ -114,12 +116,12 @@ export default class PlayerController extends AbstractController {
             cardSprite.setDepth(this._player.handCards.findIndex(item => cardSprite.card == item));
         });
 
-        setTimeout(() => {
-            cardSprite.setInteractive({cursor: 'Pointer'})
+        addCard(this.scene, cardSprite, this._player, this._handCardsSprite).then(() => {
+            cardSprite.setInteractive({cursor: 'Pointer'});
             this._isActionActive = false;
-        }, 1000);
 
-        addCard(this.scene, cardSprite, this._player, this._handCardsSprite);
+            EventDispatcher.getInstance().emit('addCardFinished', this._player, cardSprite);
+        });
 
         this._handCardsSprite.push(cardSprite);
     }
