@@ -1,28 +1,36 @@
+import Controller from "../../game/Controller/Controller";
+import PlayerController from "../../game/Controller/Player/PlayerController";
 import DeckController from "../../game/Controller/Deck/DeckController";
-import Image = Phaser.GameObjects.Image;
+import BotController from "../../game/Controller/Bots/BotController";
 
 export default class MainScene extends Phaser.Scene {
-    private deckController: DeckController;
-    private _backgroundImage : Image;
+    public controllers: Controller[] = [];
 
     constructor() {
         super({
             key: "MainScene",
         });
+
+        this.controllers = this.buildControllers();
+    }
+
+    private buildControllers(): Controller[] {
+        return [
+            new DeckController(this),
+            new BotController(this),
+            new PlayerController(this),
+        ];
     }
 
     public preload(): void {
-        this.deckController = new DeckController(this);
-        this.deckController.start();
+        this.controllers.map(controller => controller.preload());
     }
 
     public create(): void {
-        this.scene.systems.canvas.style.transform = 'rotateX(30deg)';
+        this.controllers.map(controller => controller.created());
+    }
 
-        this._backgroundImage = this.add.image(0, 0, 'Background').setOrigin(0,0);
-        this._backgroundImage.displayWidth = this.sys.canvas.width;
-        this._backgroundImage.displayHeight = this.sys.canvas.height;
-
-        this.deckController.create();
+    public update(time: number, delta: number) {
+        this.controllers.map(controller => controller.update(time, delta));
     }
 }

@@ -24,9 +24,19 @@ export default class CardDeck {
         return this;
     }
 
+    public removeCard(): Card {
+        const cardRemoved : Card = this.cards.at(0);
+
+        this.cards = this.cards.filter((card, index) => {
+            return index > 0;
+        });
+
+        return cardRemoved;
+    }
+
     protected firstCardRule(index: number = 0): void {
         if (this.cards[index] instanceof NumberCard) {
-            const cardTemp : Card = this.cards[index];
+            const cardTemp: Card = this.cards[index];
 
             this.cards[index] = this.cards[0];
             this.cards[0] = cardTemp;

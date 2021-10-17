@@ -1,292 +1,243 @@
+import AbstractController from "../AbstractController";
 import CardDeck from "../../Objetcs/Entities/Cards/CardDeck";
 import DeckSprite from "../../../view/sprites/cards/DeckSprite";
-import SelectedCardSprite from "../../../view/sprites/cards/SelectedCardSprite";
+import EventDispatcher from "../../Events/EventDispatcher";
 import Player from "../../Objetcs/Entities/Player/Player";
-import HandCardList from "../../Objetcs/Entities/Player/HandCardList";
-import PlayerRoundIterator from "../../Objetcs/Entities/Player/PlayerRoundIterator";
 import Card from "../../Objetcs/Entities/Cards/Card";
-import PlayerGui from "../../Objetcs/Entities/Player/PlayerGui";
-import HandCardsSpriteList from "../../Objetcs/Entities/Player/HandCardsSpriteList";
-import PlayerPosition from "../../Objetcs/Entities/Player/PlayerPosition";
-import CardSprite from "../../../view/sprites/cards/CardSprite";
-import {OrientationPlayerEnum} from "../../Objetcs/Enums/Game/PlayerEnum";
-import Sprite = Phaser.GameObjects.Sprite;
-import Text = Phaser.GameObjects.Text;
+import PlayerRoundIterator from "../../Objetcs/Entities/Player/PlayerRoundIterator";
 import Image = Phaser.GameObjects.Image;
-import NumberCard from "../../Objetcs/Entities/Cards/NumberCard";
-import ActionCard from "../../Objetcs/Entities/Cards/ActionCard";
-import {isWildCard} from "../../Utilitys/CardUtil";
+import CardSprite from "../../../view/sprites/cards/CardSprite";
+import Layer = Phaser.GameObjects.Layer;
 
-export default class DeckController {
-
-    /**
-     * Game scene
-     * @protected
-     */
-    protected scene: Phaser.Scene;
+export default class DeckController extends AbstractController {
+    private _cardDeck: CardDeck;
 
     /**
-     * Entity to handle the deck
-     * @protected
+     * Game Objects
      */
-    protected cardDeck: CardDeck = new CardDeck();
+    private _backgroundImage: Image;
+    private _midCircleImage: Image;
+    private _deckSprite: DeckSprite;
+    private _startCardSprite : CardSprite;
+    private _selectCard : Card;
+    private _cardOffDeck: Array<CardSprite> = new Array<CardSprite>();
 
-    /**
-     * Number which cards are under the deck
-     * @protected
-     */
-    protected readonly numberCardsUnderDeck: number = 10;
+    private _layerBackground: Layer;
+    private _layerCards: Layer;
 
-    protected widthScreen: number;
-    protected heightScreen: number;
-
-    protected deckSprite: DeckSprite;
-    protected selectedCardSprite: SelectedCardSprite;
-    protected selectedCard: Card;
-
-    private readonly _cardSize: number = 0.2;
-    private midCircle: Sprite;
-
-    private playerRoundIterator: PlayerRoundIterator;
+    private _playerRoundIterator: PlayerRoundIterator;
+    private _isGamePlayStart: boolean = false;
 
     constructor(scene: Phaser.Scene) {
-        this.scene = scene;
-
-        this.widthScreen = this.scene.sys.game.canvas.width;
-        this.heightScreen = this.scene.sys.game.canvas.height;
+        super(scene);
     }
 
-    public start(): void {
-        this.cardDeck.shuffle();
-        this.playerRoundIterator = new PlayerRoundIterator(this.createPlayers());
+    /**
+     * Method called when creating controller
+     */
+    public beforeCreate(): void {
+        this._cardDeck = new CardDeck();
+        this._cardDeck.shuffle();
 
-        this.playerRoundIterator.players.map((player: Player, index: number) => {
-            this.scene.load.image(`player_user_photo_${index}`, player.picture);
+        this._playerRoundIterator = new PlayerRoundIterator([]);
+    }
+
+    /**
+     * Method for adding events
+     * @private
+     */
+    protected callEvents(): void {
+        this._deckSprite.on('pointerdown', () => {
+            EventDispatcher.getInstance().emit('clickDeckSprite', this._cardDeck.removeCard(), this._deckSprite.x, this._deckSprite.y);
+        });
+
+        EventDispatcher.getInstance().on('playCard', (player: Player, card: Card) => {
+            console.log(player, card);
+        });
+
+        EventDispatcher.getInstance().on('addPlayer', (player: Player) => {
+            this._playerRoundIterator.players.push(player);
+        });
+
+        EventDispatcher.getInstance().on('endPlay', (player: Player, cardSprite : CardSprite) => {
+            if(cardSprite !== undefined && cardSprite !== null){
+                this._cardOffDeck.push(cardSprite);
+                this._layerCards.add(cardSprite);
+                cardSprite.setDepth(this._cardOffDeck.length);
+
+                console.log(this._cardOffDeck.map((c) => c.card));
+            }
+
+            this._playerRoundIterator.nextPlayer();
+            this.callPlayerToPlay();
+
+            return true;
         });
     }
 
-    public create(): void {
-        this.createMidCircle();
-        this.createCardsUnderDeck();
-        this.createFirstCardGame();
-        this.renderPlayersGui();
+    /**
+     * Method for creating the elements
+     * @private
+     */
+    protected buildElements(): void {
+        this._layerBackground = this.scene.add.layer();
+        this._layerCards = this.scene.add.layer();
 
-        this.playerRoundIterator.players.map((player: Player, index: number) => {
-            let handCardSprite: HandCardsSpriteList = new HandCardsSpriteList();
+        this._backgroundImage = this.buildBackgroundImage();
+        this._midCircleImage = this.buildMidCircleImage();
+        this._deckSprite = this.buildDeckSprite();
+        this._startCardSprite = this.buildStartCardSprite();
+    }
 
-            player.handCards.map((card, index) => {
+    /**
+     * Method for creating the on-screen elements
+     */
+    public created(): void {
+        super.created();
 
-                const isHorizontal: boolean = player.positions.orientation.valueOf() == OrientationPlayerEnum.HORIZONTAL;
+        this._layerBackground.add(this._backgroundImage);
+        this._layerBackground.add(this._midCircleImage);
 
-                const spaceInCards = 200 / player.handCards.length;
-                let positionX = player.positions.cardPositionX + (isHorizontal ? index * spaceInCards : 0);
-                let positionY = player.positions.cardPositionY + (!isHorizontal ? index * spaceInCards : 0);
+        this._layerCards.add(this._deckSprite);
+        this._layerCards.add(this._startCardSprite);
 
-                let cardSprite: CardSprite = new CardSprite(this.scene, positionX, positionY, card);
-                cardSprite.setAngle(player.positions.cardRotation);
+        this.scene.scene.systems.canvas.style.transform = 'rotateX(30deg)';
+    }
 
-                if (player.isActive) {
-                    cardSprite.setInteractive({
-                        cursor: 'pointer'
-                    });
-
-                    cardSprite.on('pointerover', function () {
-                        this.setTint(0xff0000);
-                    });
-
-                    cardSprite.on('pointerout', function () {
-                        this.clearTint();
-                    });
-
-                    cardSprite.on('pointerdown', () => {
-
-                        if (this.playerRoundIterator.currentPlayerIndex == player.positionIndex) {
-                            if (DeckController.validatePlayCardInGame(this.selectedCard, cardSprite.card)) {
-                                this.selectedCard = cardSprite.card;
-                                player.removePlayedCard(cardSprite.card);
-                                player.removePlayedCardSprite(cardSprite);
-                                cardSprite.setDepth(1);
-
-                                this.scene.tweens.add({
-                                    targets: cardSprite,
-                                    angle: Phaser.Math.Between(cardSprite.angle - 90, cardSprite.angle + 90),
-                                    x: this.selectedCardSprite.x,
-                                    y: this.selectedCardSprite.y,
-                                    duration: 500,
-                                });
-
-                                this.nextPlayer();
-                            } else {
-                                alert("You cannot play this card");
-                            }
-                        } else {
-                            alert("It's not your turn to play yet")
-                        }
-                    });
-                }
-
-                handCardSprite.addSprite(cardSprite);
+    /**
+     * Method that is called on each frame
+     * @param time
+     * @param delta
+     */
+    public update(time: number, delta: number): void {
+        if (this._playerRoundIterator.players.length === 4 && this._isGamePlayStart) {
+            this._isGamePlayStart = false;
+            this.addCardsToAllPlayers().then(() => {
+                this.callPlayerToPlay();
             });
-
-            player.handCardsSprite = handCardSprite;
-        });
-    }
-
-    public nextPlayer(): void {
-        this.playerRoundIterator.nextPlayer();
-        console.log(this.playerRoundIterator.currentPlayer)
-
-        if (!this.playerRoundIterator.currentPlayer.isActive) {
-            let cardsSprite = this.playerRoundIterator.currentPlayer.handCardsSprite.sprites;
-            let isFindCardToPlay: boolean = false;
-
-            for (let i = 0; i < cardsSprite.length; i++) {
-                if (DeckController.validatePlayCardInGame(this.selectedCard, cardsSprite[i].card) && !isFindCardToPlay) {
-                    isFindCardToPlay = true;
-
-                    setTimeout(() => {
-                        this.selectedCard = cardsSprite[i].card;
-                        this.playerRoundIterator.currentPlayer.removePlayedCard(cardsSprite[i].card);
-                        this.playerRoundIterator.currentPlayer.removePlayedCardSprite(cardsSprite[i]);
-                        cardsSprite[i].setDepth(1);
-
-                        this.scene.tweens.add({
-                            targets: cardsSprite[i],
-                            angle: Phaser.Math.Between(cardsSprite[i].angle - 90, cardsSprite[i].angle + 90),
-                            x: this.selectedCardSprite.x,
-                            y: this.selectedCardSprite.y,
-                            duration: 500,
-                        });
-
-                        console.log('Is player')
-
-                        this.nextPlayer();
-                        return;
-                    }, Phaser.Math.Between(500, 2000))
-                }
-            }
-
-            if (!isFindCardToPlay) {
-                console.log('Não tem carta')
-                console.log(this.selectedCard)
-                console.log(this.playerRoundIterator.currentPlayer.hasHandCard(this.selectedCard))
-                console.log(this.playerRoundIterator.currentPlayer.handCards)
-                this.nextPlayer();
-            }
         }
     }
 
-    private renderPlayersGui(): void {
-        this.playerRoundIterator.gui = this.playerRoundIterator.players.map((player: Player, index: number) => {
-            let textName: Text = this.scene.make.text({
-                x: player.positions.uiPositionX,
-                y: player.positions.uiPositionY,
-                text: player.name,
-                style: {
-                    font: '20px monospace',
-                }
-            }).setOrigin(0.5, 0.5);
+    /**
+     * Method for calling the next player to play
+     * @private
+     */
+    private callPlayerToPlay(): boolean {
+        return EventDispatcher.getInstance().emit('startPlay', this._playerRoundIterator.currentPlayer, this._selectCard, this._startCardSprite.x, this._startCardSprite.y, this._layerCards);
+    }
 
-            let photo: Image = this.scene.add.image(player.positions.uiPositionX - 80, player.positions.uiPositionY, `player_user_photo_${index}`).setScale(0.1);
+    /**
+     * Method for adding starting cards for players
+     * @param limitCards
+     * @private
+     */
+    private async addCardsToAllPlayers(limitCards: number = 7): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            for (let player of this._playerRoundIterator.players) {
+                await this.addStartCards(player, limitCards);
+            }
 
-            return new PlayerGui(textName, photo);
+            resolve(true);
         });
     }
 
-    private createFirstCardGame(): void {
-        let shadow = this.scene.add.sprite((this.widthScreen / 2 + 80) + 3, (this.heightScreen / 2 + 15) + 3, 'Deck');
-        shadow.tint = 0x000000;
-        shadow.alpha = 0.6;
-        shadow.setScale(this._cardSize);
+    /**
+     * Method for adding starting cards for a player
+     * @param player
+     * @param limitCards
+     * @param index
+     * @private
+     */
+    private async addStartCards(player: Player, limitCards: number, index: number = 0): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            await this.addCardToPlayer(player);
 
-        this.selectedCard = this.cardDeck.cards[0];
-        this.selectedCardSprite = new SelectedCardSprite(this.scene, this.widthScreen / 2 + 80, this.heightScreen / 2 + 15, this.cardDeck.cards[0]);
-        this.selectedCardSprite.setScale(this._cardSize);
+            if (index < limitCards) {
+                const result: boolean = await this.addStartCards(player, limitCards, index + 1);
+
+                resolve(result);
+            }
+
+            resolve(true);
+        });
     }
 
     /**
-     * Method for creating mid circle
+     * Method for adding player cards
+     * @param player
      * @private
      */
-    private createMidCircle(): void {
-        this.midCircle = this.scene.add.sprite(this.widthScreen / 2 + 24, this.heightScreen / 2 + 15, 'white-circle');
-        this.midCircle.setScale(1.4);
-    }
+    private async addCardToPlayer(player: Player): Promise<CardSprite> {
 
-    /**
-     * Method for creating the cards under the deck
-     * @private
-     */
-    private createCardsUnderDeck(): void {
-        const limitCardsInUnderDeck = 4;
+        return new Promise((resolve, reject) => {
+            const isEventDispatche: boolean = EventDispatcher.getInstance()
+                .emit('clickDeckSprite', player, this._cardDeck.removeCard(), this._deckSprite.x, this._deckSprite.y);
 
-        let cardPositionX: number = 0;
-        let cardPositionY: number = 0;
+            if (isEventDispatche) {
 
-        for (let i: number = limitCardsInUnderDeck; i > 0; i--) {
-            cardPositionX = this.widthScreen / 2 - 30;
-            cardPositionY = ((this.heightScreen / 2) + 5) + (4 * i);
+                EventDispatcher.getInstance().on('addCardFinished', (player: Player, cardSprite: CardSprite) => {
+                    return resolve(cardSprite);
+                });
 
-            let shadow: Sprite = this.scene.add.sprite(cardPositionX + 3, cardPositionY + 3, 'Deck');
-            shadow.tint = 0x000000;
-            shadow.alpha = 0.6;
-            shadow.setScale(this._cardSize);
-
-            if (i == 1) {
-                this.deckSprite = new DeckSprite(this.scene, cardPositionX, cardPositionY);
-                this.deckSprite.setScale(this._cardSize);
             } else {
-                this.scene.add.sprite(cardPositionX, cardPositionY, 'Deck').setScale(this._cardSize);
+                reject();
             }
-        }
+        });
     }
 
-    private createPlayers(): Array<Player> {
-        let playersArray: Array<Player> = new Array<Player>();
+    /**
+     * Method for creating the desktop background image
+     * @private
+     */
+    private buildBackgroundImage(): Image {
+        let backgroundImage: Image = this.scene.add.image(0, 0, 'Background').setOrigin(0, 0);
+        backgroundImage.displayWidth = this._widthScreen;
+        backgroundImage.displayHeight = this._heightScreen;
 
-        for (let i = 0; i < 4; i++) {
-            const playerConfig = {
-                isActive: i === 0,
-                positionIndex: i,
-                name: `Player ${i}`,
-                image: 'https://i1.wp.com/terracoeconomico.com.br/wp-content/uploads/2019/01/default-user-image.png',
-            }
-
-            const playerPosition: PlayerPosition = new PlayerPosition(playerConfig.positionIndex, this.scene);
-
-            let handCard: HandCardList = new HandCardList();
-
-            this.cardDeck.cards.splice(0, 7).map(card => handCard.addCard(card));
-
-            let player: Player = new Player(playerConfig.name, playerConfig.image, handCard, playerConfig.positionIndex, playerConfig.isActive);
-            player.positions = playerPosition;
-
-            this.cardDeck.cards = this.cardDeck.cards.splice(7, this.cardDeck.cards.length);
-
-            playersArray.push(player);
-        }
-
-        return playersArray;
+        return backgroundImage;
     }
 
-    private static validatePlayCardInGame(cardBase: Card, cardPlay: Card): boolean {
-        if (isWildCard(cardPlay)) {
-            return true;
-        } else if (cardBase instanceof NumberCard) {
-            if (cardPlay instanceof NumberCard && cardPlay.number === cardBase.number) {
-                return true;
+    /**
+     * Method for creating the circle in the middle of the table
+     * @private
+     */
+    private buildMidCircleImage(): Image {
+        let midCircleImage: Image = this.scene.add.sprite(this._widthScreen / 2 + 24, this._heightScreen / 2 + 15, 'white-circle');
+        midCircleImage.setScale(1.4);
+
+        return midCircleImage;
+    }
+
+    /**
+     * Method for creating the deck
+     */
+    public buildDeckSprite(): DeckSprite {
+        const cardPositionX = (this._widthScreen / 2) - 40;
+        const cardPositionY = this._heightScreen / 2;
+
+        return new DeckSprite(this.scene, cardPositionX, cardPositionY);
+    }
+
+    /**
+     * Method for creating the initial letter
+     * @private
+     */
+    private buildStartCardSprite(): CardSprite {
+        this._selectCard = this._cardDeck.removeCard();
+        let cardSprite = new CardSprite(this.scene, this._deckSprite.x, this._deckSprite.y, this._selectCard);
+        this._cardOffDeck.push(cardSprite);
+
+        this.scene.tweens.add({
+            targets: cardSprite,
+            x: this._deckSprite.x + 130,
+            y: this._deckSprite.y + 28,
+            ease: 'Power1',
+            duration: 500,
+            onComplete: () => {
+                this._isGamePlayStart = true;
             }
+        });
 
-            return cardPlay.color === cardBase.color;
-        } else if (cardBase instanceof ActionCard) {
-            if (!isWildCard(cardBase)) {
-                return cardBase.color === cardPlay.color || cardPlay.type === cardBase.type;
-            }
-
-            // TODO: perform implementation for validation
-            return true;
-        }
-
-        return true;
+        return cardSprite;
     }
 }
