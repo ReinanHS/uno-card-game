@@ -17,6 +17,10 @@ import Player from "../../Objetcs/Entities/Player/Player";
 export default class BotController extends AbstractController {
     private _bots: Array<Bot> = new Array<Bot>();
 
+    /**
+     * Game Objects
+     * @private
+     */
     private _photoImage: Array<Image> = new Array<Image>();
     private _circleGraphics: Array<Graphics> = new Array<Graphics>();
     private _textName: Array<Text> = new Array<Text>();
@@ -25,56 +29,150 @@ export default class BotController extends AbstractController {
     private _layerGUI: Layer;
     private _layerCards: Layer;
 
+    private _timeToPlay: number = 10;
+    private _intervalIdTimePlay : NodeJS.Timer;
+
     constructor(scene: Phaser.Scene) {
         super(scene);
     }
 
-    public created(): void {
-        this.buildBots();
+    /**
+     * Method for creating the elements
+     * @protected
+     */
+    protected buildElements() {
         this._layerCards = this.scene.add.layer();
         this._layerGUI = this.scene.add.layer();
 
-        this._bots.forEach(bot => {
-            this.buildBotGUI(bot);
-            EventDispatcher.getInstance().emit('addPlayer', bot);
-        });
-
-        EventDispatcher.getInstance().on('clickDeckSprite', (player: Player, card: Card, x: number, y: number) => {
-            this._bots.forEach(bot => {
-                if(bot.positionIndex == player.positionIndex){
-                    bot.handCards.push(card);
-                    this.addHandCardsSprite(bot, card, x, y);
-                }
-            });
-        });
-        //
-        // EventDispatcher.getInstance().on('startPlay', (player: Player) => {
-        //     let bot: Bot = this._bots.find(bot => bot.positionIndex === player.positionIndex);
-        //     if (bot !== undefined) {
-        //         this._textInfo[bot.positionIndex].text = "Playing";
-        //         let time = 10;
-        //
-        //         let refreshIntervalId = setInterval(() => {
-        //             time -= 1;
-        //             this._textInfo[bot.positionIndex].text = `Playing (${time})`;
-        //
-        //             if(time <= 0){
-        //                 clearInterval(refreshIntervalId);
-        //                 this._textInfo[bot.positionIndex].text = `Waiting`;
-        //                 EventDispatcher.getInstance().emit('nextPlay')
-        //             }
-        //
-        //         }, 1000)
-        //     }
-        // });
+        this.buildBots();
+        this._bots.forEach(bot => this.buildBotGUI(bot));
     }
 
+    /**
+     * Method for adding events
+     * @protected
+     */
+    protected callEvents() {
+        this._bots.forEach(bot => EventDispatcher.getInstance().emit('addPlayer', bot));
+        EventDispatcher.getInstance().on('clickDeckSprite', (player: Player, card: Card, x: number, y: number) => { this.onClickDeckSprite(player, card, x, y); });
+        EventDispatcher.getInstance().on('startPlay', (player: Player, card: Card, x: number, y: number, layerCards: Layer) => { this.onStartPlay(player, card, x, y, layerCards); });
+    }
+
+    /**
+     * Method is called when bot gets a new card.
+     * @param player
+     * @param card
+     * @param x
+     * @param y
+     * @private
+     */
+    private onClickDeckSprite(player: Player, card: Card, x: number, y: number): boolean {
+        this._bots.forEach(bot => {
+            if (bot.positionIndex == player.positionIndex) {
+                bot.handCards.push(card);
+                this.addHandCardsSprite(bot, card, x, y);
+
+                return true;
+            }
+        });
+
+        return false;
+    }
+
+    /**
+     * Method that is called when it is the bot turn to play
+     * @param player
+     * @param card
+     * @param x
+     * @param y
+     * @param layerCards
+     * @private
+     */
+    private onStartPlay(player: Player, card: Card, x: number, y: number, layerCards: Layer): boolean {
+        if (this._bots.find(bot => bot.positionIndex === player.positionIndex) !== undefined) {
+
+            this._timeToPlay = 10;
+            this._textInfo[player.positionIndex].text = "Playing";
+            this._intervalIdTimePlay = setInterval(() => this.updateTimeToPlay(player), 1000);
+            this.checkBestCardToPlay(player, card, x, y, layerCards);
+        }
+
+        return true;
+    }
+
+    /**
+     * Method to check the best card to play
+     * @param player
+     * @param card
+     * @param x
+     * @param y
+     * @param layerCards
+     * @private
+     */
+    private checkBestCardToPlay(player: Player, card: Card, x: number, y: number, layerCards: Layer): void
+    {
+        if (player.hasHandCard(card)) {
+            // const cardSprite: CardSprite = player.handCardsSprite.sprites[player.findIndex(card)];
+            // layerCards.add(cardSprite);
+            //
+            // player.removePlayedCard(card);
+            // player.removePlayedCardSprite(cardSprite);
+            //
+            // this.scene.tweens.add({
+            //     targets: cardSprite,
+            //     x: x,
+            //     y: y,
+            //     angle: Phaser.Math.Between(cardSprite.angle - 90, cardSprite.angle + 90),
+            //     duration: 500,
+            //     ease: 'Power1',
+            //     onComplete: () => {
+            //         this._timeToPlay = 0;
+            //     }
+            // });
+            console.log('Tem a carta');
+        } else {
+            console.log('Não tem a carta');
+        }
+    }
+
+    /**
+     * Method to update the time the bot has left to play
+     * @param player
+     * @private
+     */
+    private updateTimeToPlay(player: Player): void {
+        this._timeToPlay -= 1;
+        this._textInfo[player.positionIndex].text = `Playing (${this._timeToPlay})`;
+
+        if (this._timeToPlay <= 0) {
+            clearInterval(this._intervalIdTimePlay);
+            this._textInfo[player.positionIndex].text = `Waiting`;
+            EventDispatcher.getInstance().emit('nextPlay');
+        }
+    }
+
+    /**
+     * Method for creating the on-screen elements
+     */
+    public created() {
+        super.created();
+    }
+
+    /**
+     * Method for creating the bots
+     * @private
+     */
     private buildBots(): void {
         for (let i = 0; i < 3; i++) {
             this._bots.push(this.buildBot(i + 1));
         }
     }
 
+    /**
+     * Method for creating a bot
+     * @param index
+     * @private
+     */
     private buildBot(index: number): Bot {
         const playerPosition: PlayerPosition = new PlayerPosition(index, this.scene);
         let handCard: HandCardList = new HandCardList();
@@ -86,6 +184,11 @@ export default class BotController extends AbstractController {
         return bot;
     }
 
+    /**
+     * Method for creating the GUI interface to bots
+     * @param bot
+     * @private
+     */
     private buildBotGUI(bot: Bot) {
         const photoPlayerKey = `photo_player_${bot.positionIndex}`;
         const radius: number = Math.min(84, 84) / 2;
@@ -97,7 +200,6 @@ export default class BotController extends AbstractController {
         this._photoImage[bot.positionIndex] = this.scene.add.image(this._circleGraphics[bot.positionIndex].x, this._circleGraphics[bot.positionIndex].y, null);
         this._photoImage[bot.positionIndex].displayWidth = 84;
         this._photoImage[bot.positionIndex].displayHeight = 84;
-
         this._photoImage[bot.positionIndex].setMask(this._circleGraphics[bot.positionIndex].createGeometryMask());
 
         let loader: LoaderPlugin = new Phaser.Loader.LoaderPlugin(this.scene);
@@ -136,6 +238,14 @@ export default class BotController extends AbstractController {
         this._layerGUI.add(this._textInfo[bot.positionIndex]);
     }
 
+    /**
+     * Method for adding cards to the bot hand
+     * @param bot
+     * @param card
+     * @param x
+     * @param y
+     * @private
+     */
     private addHandCardsSprite(bot: Bot, card: Card, x: number, y: number): void {
         let cardSprite: CardSprite = new CardSprite(this.scene, x, y, card);
         this._layerCards.add(cardSprite);

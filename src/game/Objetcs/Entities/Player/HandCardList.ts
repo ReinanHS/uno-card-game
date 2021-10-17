@@ -1,6 +1,8 @@
 import Card from "../Cards/Card";
 import {isWildCard} from "../../../Utilitys/CardUtil";
 import {CardType} from "../../Enums/Cards/CardEnum";
+import ActionCard from "../Cards/ActionCard";
+import NumberCard from "../Cards/NumberCard";
 
 export default class HandCardList {
     private _handCards: Array<Card> = new Array<Card>();
@@ -24,7 +26,7 @@ export default class HandCardList {
 
     public findCardOfType(cardType: CardType): Card {
         this._handCards.forEach(c => {
-            if(c.type == cardType){
+            if (c.type == cardType) {
                 return c;
             }
         })
@@ -32,10 +34,32 @@ export default class HandCardList {
         return null;
     }
 
+    public findIndex(card: Card): number {
+
+        for (let i = 0; i < this._handCards.length; i++) {
+            if (isWildCard(card) && this._handCards[i].type == card.type || card instanceof ActionCard && (this._handCards[i].color == card.color || this._handCards[i].type == card.type)) {
+                return i;
+            } else if (card instanceof NumberCard) {
+
+                if (card.color == this._handCards[i].color) {
+                    return i;
+                } else if (this._handCards[i] instanceof NumberCard) {
+                    let numberCard: NumberCard = this._handCards[i] as NumberCard;
+
+                    if (numberCard.number == card.number) {
+                        return i;
+                    }
+                }
+
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     public hasCard(card: Card): boolean {
-        return isWildCard(card)
-            ? this._handCards.find(c => c.type == card.type) != undefined
-            : this._handCards.find(c => c == card) != undefined;
+        return this.findIndex(card) >= 0;
     }
 
     public length(): number {

@@ -79,6 +79,10 @@ export default class Player {
         return this._handCards.hasCard(card);
     }
 
+    public findIndex(card : Card) : number {
+        return this._handCards.findIndex(card);
+    }
+
     public addToHandCardsSprite(sprite : CardSprite): void {
         this._handCardsSprite.addSprite(sprite);
     }

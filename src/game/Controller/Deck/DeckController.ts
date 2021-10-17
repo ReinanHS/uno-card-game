@@ -7,6 +7,7 @@ import Card from "../../Objetcs/Entities/Cards/Card";
 import PlayerRoundIterator from "../../Objetcs/Entities/Player/PlayerRoundIterator";
 import Image = Phaser.GameObjects.Image;
 import CardSprite from "../../../view/sprites/cards/CardSprite";
+import Layer = Phaser.GameObjects.Layer;
 
 export default class DeckController extends AbstractController {
     private _cardDeck: CardDeck;
@@ -17,9 +18,13 @@ export default class DeckController extends AbstractController {
     private _backgroundImage: Image;
     private _midCircleImage: Image;
     private _deckSprite: DeckSprite;
+    private _startCardSprite : CardSprite;
+    private _selectCard : Card;
+
+    private _layerBackground: Layer;
+    private _layerCards: Layer;
 
     private _playerRoundIterator: PlayerRoundIterator;
-
     private _isGamePlayStart: boolean = false;
 
     constructor(scene: Phaser.Scene) {
@@ -55,7 +60,7 @@ export default class DeckController extends AbstractController {
 
         EventDispatcher.getInstance().on('nextPlay', () => {
             this._playerRoundIterator.nextPlayer();
-            this.sendNextPlayEvent();
+            this.callPlayerToPlay();
 
             return true;
         });
@@ -66,9 +71,13 @@ export default class DeckController extends AbstractController {
      * @private
      */
     protected buildElements(): void {
+        this._layerBackground = this.scene.add.layer();
+        this._layerCards = this.scene.add.layer();
+
         this._backgroundImage = this.buildBackgroundImage();
         this._midCircleImage = this.buildMidCircleImage();
         this._deckSprite = this.buildDeckSprite();
+        this._startCardSprite = this.buildStartCardSprite();
     }
 
     /**
@@ -76,6 +85,12 @@ export default class DeckController extends AbstractController {
      */
     public created(): void {
         super.created();
+
+        this._layerBackground.add(this._backgroundImage);
+        this._layerBackground.add(this._midCircleImage);
+
+        this._layerCards.add(this._deckSprite);
+        this._layerCards.add(this._startCardSprite);
 
         this.scene.scene.systems.canvas.style.transform = 'rotateX(30deg)';
     }
@@ -86,10 +101,10 @@ export default class DeckController extends AbstractController {
      * @param delta
      */
     public update(time: number, delta: number): void {
-        if (this._playerRoundIterator.players.length === 4 && !this._isGamePlayStart) {
-            this._isGamePlayStart = true;
+        if (this._playerRoundIterator.players.length === 4 && this._isGamePlayStart) {
+            this._isGamePlayStart = false;
             this.addCardsToAllPlayers().then(() => {
-                alert('Starting the game');
+                this.callPlayerToPlay();
             });
         }
     }
@@ -98,8 +113,8 @@ export default class DeckController extends AbstractController {
      * Method for calling the next player to play
      * @private
      */
-    private sendNextPlayEvent(): boolean {
-        return EventDispatcher.getInstance().emit('startPlay', this._playerRoundIterator.currentPlayer);
+    private callPlayerToPlay(): boolean {
+        return EventDispatcher.getInstance().emit('startPlay', this._playerRoundIterator.currentPlayer, this._selectCard, this._startCardSprite.x, this._startCardSprite.y, this._layerCards);
     }
 
     /**
@@ -188,9 +203,31 @@ export default class DeckController extends AbstractController {
      * Method for creating the deck
      */
     public buildDeckSprite(): DeckSprite {
-        const cardPositionX = this._widthScreen / 2;
+        const cardPositionX = (this._widthScreen / 2) - 40;
         const cardPositionY = this._heightScreen / 2;
 
         return new DeckSprite(this.scene, cardPositionX, cardPositionY);
+    }
+
+    /**
+     * Method for creating the initial letter
+     * @private
+     */
+    private buildStartCardSprite(): CardSprite {
+        this._selectCard = this._cardDeck.removeCard();
+        let cardSprite = new CardSprite(this.scene, this._deckSprite.x, this._deckSprite.y, this._selectCard);
+
+        this.scene.tweens.add({
+            targets: cardSprite,
+            x: this._deckSprite.x + 130,
+            y: this._deckSprite.y + 28,
+            ease: 'Power1',
+            duration: 500,
+            onComplete: () => {
+                this._isGamePlayStart = true;
+            }
+        });
+
+        return cardSprite;
     }
 }
