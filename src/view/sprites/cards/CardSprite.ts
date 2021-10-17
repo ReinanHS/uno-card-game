@@ -2,7 +2,7 @@ import Card from "../../../game/Objetcs/Entities/Cards/Card";
 
 
 export default class CardSprite extends Phaser.GameObjects.Sprite {
-    private readonly _card : Card;
+    private _card : Card;
 
     constructor(scene: Phaser.Scene, x: number, y: number, card?: Card) {
         super(scene, x, y, card === null ? 'Deck' : card.key);
@@ -16,5 +16,9 @@ export default class CardSprite extends Phaser.GameObjects.Sprite {
 
     get card(): Card {
         return this._card;
+    }
+
+    set card(value: Card) {
+        this._card = value;
     }
 }

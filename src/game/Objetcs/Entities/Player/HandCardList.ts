@@ -35,7 +35,6 @@ export default class HandCardList {
     }
 
     public findIndex(card: Card): number {
-
         for (let i = 0; i < this._handCards.length; i++) {
             if (isWildCard(card) && this._handCards[i].type == card.type || card instanceof ActionCard && (this._handCards[i].color == card.color || this._handCards[i].type == card.type)) {
                 return i;
@@ -50,8 +49,6 @@ export default class HandCardList {
                         return i;
                     }
                 }
-
-                return i;
             }
         }
 

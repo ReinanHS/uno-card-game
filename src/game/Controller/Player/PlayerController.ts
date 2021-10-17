@@ -50,7 +50,7 @@ export default class PlayerController extends AbstractController {
             if (this._player.positionIndex === player.positionIndex) {
                 this._isSelect = true;
                 this._textInfo.text = "Playing";
-                let time = 10;
+                let time = 50;
 
                 let refreshIntervalId = setInterval(() => {
                     time -= 1;
@@ -59,7 +59,7 @@ export default class PlayerController extends AbstractController {
                     if (time <= 0) {
                         clearInterval(refreshIntervalId);
                         this._isSelect = false;
-                        EventDispatcher.getInstance().emit('nextPlay')
+                        EventDispatcher.getInstance().emit('endPlay', player, null);
                     }
 
                 }, 1000)

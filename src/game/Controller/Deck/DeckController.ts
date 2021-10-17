@@ -20,6 +20,7 @@ export default class DeckController extends AbstractController {
     private _deckSprite: DeckSprite;
     private _startCardSprite : CardSprite;
     private _selectCard : Card;
+    private _cardOffDeck: Array<CardSprite> = new Array<CardSprite>();
 
     private _layerBackground: Layer;
     private _layerCards: Layer;
@@ -58,7 +59,15 @@ export default class DeckController extends AbstractController {
             this._playerRoundIterator.players.push(player);
         });
 
-        EventDispatcher.getInstance().on('nextPlay', () => {
+        EventDispatcher.getInstance().on('endPlay', (player: Player, cardSprite : CardSprite) => {
+            if(cardSprite !== undefined && cardSprite !== null){
+                this._cardOffDeck.push(cardSprite);
+                this._layerCards.add(cardSprite);
+                cardSprite.setDepth(this._cardOffDeck.length);
+
+                console.log(this._cardOffDeck.map((c) => c.card));
+            }
+
             this._playerRoundIterator.nextPlayer();
             this.callPlayerToPlay();
 
@@ -216,6 +225,7 @@ export default class DeckController extends AbstractController {
     private buildStartCardSprite(): CardSprite {
         this._selectCard = this._cardDeck.removeCard();
         let cardSprite = new CardSprite(this.scene, this._deckSprite.x, this._deckSprite.y, this._selectCard);
+        this._cardOffDeck.push(cardSprite);
 
         this.scene.tweens.add({
             targets: cardSprite,

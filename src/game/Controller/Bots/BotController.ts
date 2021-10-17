@@ -2,17 +2,19 @@ import AbstractController from "../AbstractController";
 import Bot from "../../Objetcs/Entities/Bot/Bot";
 import PlayerPosition from "../../Objetcs/Entities/Player/PlayerPosition";
 import HandCardList from "../../Objetcs/Entities/Player/HandCardList";
+import EventDispatcher from "../../Events/EventDispatcher";
+import Card from "../../Objetcs/Entities/Cards/Card";
+import CardSprite from "../../../view/sprites/cards/CardSprite";
+import {addCard, findBestCardToPlay} from "../../Utilitys/helpers";
+import HandCardsSpriteList from "../../Objetcs/Entities/Player/HandCardsSpriteList";
+import Player from "../../Objetcs/Entities/Player/Player";
+import {CardColor} from "../../Objetcs/Enums/Cards/CardEnum";
+import WildCard from "../../Objetcs/Entities/Cards/WildCard";
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import Image = Phaser.GameObjects.Image;
 import Graphics = Phaser.GameObjects.Graphics;
 import Text = Phaser.GameObjects.Text;
-import EventDispatcher from "../../Events/EventDispatcher";
-import Card from "../../Objetcs/Entities/Cards/Card";
-import CardSprite from "../../../view/sprites/cards/CardSprite";
-import {addCard} from "../../Utilitys/helpers";
-import HandCardsSpriteList from "../../Objetcs/Entities/Player/HandCardsSpriteList";
 import Layer = Phaser.GameObjects.Layer;
-import Player from "../../Objetcs/Entities/Player/Player";
 
 export default class BotController extends AbstractController {
     private _bots: Array<Bot> = new Array<Bot>();
@@ -29,8 +31,9 @@ export default class BotController extends AbstractController {
     private _layerGUI: Layer;
     private _layerCards: Layer;
 
+    public readonly startTimeToPlay: number = 5;
     private _timeToPlay: number = 10;
-    private _intervalIdTimePlay : NodeJS.Timer;
+    private _intervalIdTimePlay: NodeJS.Timer;
 
     constructor(scene: Phaser.Scene) {
         super(scene);
@@ -54,8 +57,18 @@ export default class BotController extends AbstractController {
      */
     protected callEvents() {
         this._bots.forEach(bot => EventDispatcher.getInstance().emit('addPlayer', bot));
-        EventDispatcher.getInstance().on('clickDeckSprite', (player: Player, card: Card, x: number, y: number) => { this.onClickDeckSprite(player, card, x, y); });
-        EventDispatcher.getInstance().on('startPlay', (player: Player, card: Card, x: number, y: number, layerCards: Layer) => { this.onStartPlay(player, card, x, y, layerCards); });
+
+        EventDispatcher.getInstance().on('clickDeckSprite', (player: Player, card: Card, x: number, y: number) => {
+            this.onClickDeckSprite(player, card, x, y);
+
+            return true;
+        });
+
+        EventDispatcher.getInstance().on('startPlay', (player: Player, card: Card, x: number, y: number, layerCards: Layer) => {
+            this.onStartPlay(player, card, x, y, layerCards);
+
+            return true;
+        });
     }
 
     /**
@@ -91,9 +104,10 @@ export default class BotController extends AbstractController {
     private onStartPlay(player: Player, card: Card, x: number, y: number, layerCards: Layer): boolean {
         if (this._bots.find(bot => bot.positionIndex === player.positionIndex) !== undefined) {
 
-            this._timeToPlay = 10;
+            this._timeToPlay = this.startTimeToPlay;
             this._textInfo[player.positionIndex].text = "Playing";
             this._intervalIdTimePlay = setInterval(() => this.updateTimeToPlay(player), 1000);
+
             this.checkBestCardToPlay(player, card, x, y, layerCards);
         }
 
@@ -109,26 +123,33 @@ export default class BotController extends AbstractController {
      * @param layerCards
      * @private
      */
-    private checkBestCardToPlay(player: Player, card: Card, x: number, y: number, layerCards: Layer): void
-    {
-        if (player.hasHandCard(card)) {
-            // const cardSprite: CardSprite = player.handCardsSprite.sprites[player.findIndex(card)];
-            // layerCards.add(cardSprite);
-            //
-            // player.removePlayedCard(card);
-            // player.removePlayedCardSprite(cardSprite);
-            //
-            // this.scene.tweens.add({
-            //     targets: cardSprite,
-            //     x: x,
-            //     y: y,
-            //     angle: Phaser.Math.Between(cardSprite.angle - 90, cardSprite.angle + 90),
-            //     duration: 500,
-            //     ease: 'Power1',
-            //     onComplete: () => {
-            //         this._timeToPlay = 0;
-            //     }
-            // });
+    private checkBestCardToPlay(player: Player, card: Card, x: number, y: number, layerCards: Layer): void {
+        const bestCardToPlay: Card = findBestCardToPlay(card, player.handCards);
+
+        if (bestCardToPlay !== undefined) {
+            clearInterval(this._intervalIdTimePlay);
+
+            const cardSprite: CardSprite = player.handCardsSprite.findCardSprite(bestCardToPlay);
+            player.removePlayedCard(bestCardToPlay);
+            player.removePlayedCardSprite(cardSprite);
+
+            if(bestCardToPlay instanceof WildCard){
+                cardSprite.card = new WildCard(cardSprite.card.type, CardColor.RED);
+                cardSprite.setTint(0xff0000);
+            }
+
+            this.scene.tweens.add({
+                targets: cardSprite,
+                x: x,
+                y: y,
+                angle: Phaser.Math.Between(cardSprite.angle - 90, cardSprite.angle + 90),
+                duration: 500,
+                ease: 'Power1',
+                onComplete: () => {
+                    EventDispatcher.getInstance().emit('endPlay', player, cardSprite);
+                }
+            });
+
             console.log('Tem a carta');
         } else {
             console.log('Não tem a carta');
@@ -147,7 +168,8 @@ export default class BotController extends AbstractController {
         if (this._timeToPlay <= 0) {
             clearInterval(this._intervalIdTimePlay);
             this._textInfo[player.positionIndex].text = `Waiting`;
-            EventDispatcher.getInstance().emit('nextPlay');
+
+            EventDispatcher.getInstance().emit('endPlay', player, null);
         }
     }
 
